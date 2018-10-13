@@ -5,27 +5,32 @@ Floor plan can be can be read in as a greyscale image file e.g. png.
 import matplotlib.pyplot as plt
 import numpy as np
 from pyswarm import pso
-from read_image import load_floor_plan
+from floorMap import FloorMap
 from fitness import FitnessLandscape
+from intersections import intersection
 
-MAP_FILEPATH = 'wall1small.png'
-NUM_NODES = 4
+MAP_FILEPATH = 'wall3small.png'
+NUM_NODES = 2
 
 
 # read image file, print width, height and dimensions (RGBA == 4 dimensions)
-MAP_ARRAY = load_floor_plan(MAP_FILEPATH)
-(width, height, dim) = MAP_ARRAY.shape
+floor_map = FloorMap(MAP_FILEPATH)
+(width, height) = (floor_map.width, floor_map.height)
+MAP_ARRAY = floor_map.get_array()
 print("Read Image: ", MAP_FILEPATH, "  Width: ", width, "  Height: ", height)
 
+MAP_IMG = floor_map.get_transparent_img()
+walls = floor_map.get_walls()
+
 # overlay with map image
-plt.imshow(MAP_ARRAY, zorder=10)
+plt.imshow(MAP_IMG, zorder=10)
 
-lower_bounds = np.full((NUM_NODES*2), 0)
-upper_bounds = np.full((NUM_NODES*2), width)
+lb = np.full((NUM_NODES*2), 0)          # lower bounds of fitness lanscape
+ub = np.full((NUM_NODES*2), width-1)      # upper bounds of fitness lanscape
 # get fitness values, store in z
-fit_landscape = FitnessLandscape(width, height, NUM_NODES)
+fit_landscape = FitnessLandscape(width, height, NUM_NODES, MAP_ARRAY, walls)
 
-x_optimals, fitness = pso(fit_landscape.getFitness, lower_bounds, upper_bounds, swarmsize = 100, maxiter = 10, minstep = 0.8, debug = True, phip = 1, phig = 1)
+x_optimals, fitness = pso(fit_landscape.getFitness, lb, ub, ieqcons = [fit_landscape.check_pos], swarmsize = 50, maxiter = 10, debug = True)
 print("x_optimals: ", x_optimals)
 fit_landscape.getFitness(x_optimals)  #get z of best fitness
 z = fit_landscape.getZ()
@@ -35,5 +40,5 @@ y = fit_landscape.getY()
 # create contour plot from z, x and y
 cplot = plt.contourf(x, y, z, cmap = 'gist_rainbow', levels = 100)
 plt.colorbar()
-#plt.scatter(x_optimals[1::2], x_optimals[0::2], c='m')
+plt.scatter(x_optimals[1::2], x_optimals[0::2], c='m')
 plt.show()

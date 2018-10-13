@@ -1,5 +1,6 @@
 import numpy as np
 import matplotlib.pyplot as plt
+import sys
     
 def pso(func, lb, ub, ieqcons=[], f_ieqcons=None, args=(), kwargs={}, 
         swarmsize=100, omega=0.5, phip=0.5, phig=0.5, maxiter=100, 
@@ -107,10 +108,11 @@ def pso(func, lb, ub, ieqcons=[], f_ieqcons=None, args=(), kwargs={},
         print("Particle: ", i)
         # Initialize the particle's position
         x[i, :] = lb + x[i, :]*(ub - lb)
+        x = x.astype(np.uint16)
    
         # Initialize the particle's best known position
         p[i, :] = x[i, :]
-       
+        
         # Calculate the objective's value at the current particle's
         fp[i] = obj(p[i, :])
        
@@ -148,7 +150,7 @@ def pso(func, lb, ub, ieqcons=[], f_ieqcons=None, args=(), kwargs={},
             x[i, mark1] = lb[mark1]
             x[i, mark2] = ub[mark2]
             fx = obj(x[i, :])
-            
+            x = x.astype(np.uint16)
             # Compare particle's best position (if constraints are satisfied)
             if fx<fp[i] and is_feasible(x[i, :]):
                 p[i, :] = x[i, :].copy()
@@ -171,7 +173,6 @@ def pso(func, lb, ub, ieqcons=[], f_ieqcons=None, args=(), kwargs={},
                     else:
                         g = tmp.copy()
                         fg = fx
-        
         if debug:
             print(('Best after iteration {:}: {:} {:}'.format(it, g, fg)))
         it += 1
