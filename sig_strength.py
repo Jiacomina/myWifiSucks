@@ -31,4 +31,4 @@ dist = math.sqrt((x_node - x1)**2 + (y_node - y1)**2)
 if dist > r:
 	sig_stren = 0
 else:
-	sig_stren = sig_stren_router - (L0 + 10**L_exp**log(dist) + k_1**L_1 + k_2**L_2)
+	sig_stren = sig_stren_router - (19.7 + 10**L_exp**log(dist) + k_1**L_1 + k_2**L_2)
