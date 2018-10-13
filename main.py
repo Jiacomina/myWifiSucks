@@ -9,7 +9,7 @@ from floorMap import FloorMap
 from fitness import FitnessLandscape
 from intersections import intersection
 
-MAP_FILEPATH = 'wall3small.png'
+MAP_FILEPATH = 'wall3gap.png'
 NUM_NODES = 2
 
 
@@ -29,10 +29,11 @@ lb = np.full((NUM_NODES*2), 0)          # lower bounds of fitness lanscape
 ub = np.full((NUM_NODES*2), width-1)      # upper bounds of fitness lanscape
 # get fitness values, store in z
 fit_landscape = FitnessLandscape(width, height, NUM_NODES, MAP_ARRAY, walls)
-
-x_optimals, fitness = pso(fit_landscape.getFitness, lb, ub, ieqcons = [fit_landscape.check_pos], swarmsize = 50, maxiter = 10, debug = True)
+#ieqcons = [fit_landscape.check_pos]
+x_optimals, fitness = pso(fit_landscape.getFitness, lb, ub, swarmsize = 200, maxiter = 1, debug = True)
 print("x_optimals: ", x_optimals)
 fit_landscape.getFitness(x_optimals)  #get z of best fitness
+print(fit_landscape.fitness)
 z = fit_landscape.getZ()
 x = fit_landscape.getX()
 y = fit_landscape.getY()

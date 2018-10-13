@@ -17,6 +17,7 @@ class FitnessLandscape():
         self.height = height
         self.MAP_ARRAY = MAP_ARRAY
         self.walls = walls
+        self.fitness = 0
         print("Num Nodes: ", self.num_nodes)
 
     def getAreaSum(self):
@@ -42,6 +43,7 @@ class FitnessLandscape():
                     if(strength > previous_strength or previous_strength == 0):
                         self.z[int(x_point)][int(y_point)] = strength
         fitness = -1 * self.getAreaSum()
+        self.fitness = fitness
         return fitness
     
     def getZ(self):
