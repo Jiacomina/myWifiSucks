@@ -9,7 +9,7 @@ from pyswarm import pso
 from floorMap import FloorMap
 from fitness import FitnessLandscape
 
-MAP_FILEPATH = 'wall3.png'
+MAP_FILEPATH = './Images/wall3.png'
 NUM_NODES = 1
 SCALE = 1/3
 SWARM_SIZE = 2
