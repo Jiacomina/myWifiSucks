@@ -7,39 +7,65 @@ import numpy as np
 from pyswarm import pso
 from floorMap import FloorMap
 from fitness import FitnessLandscape
-from intersections import intersection
 
-MAP_FILEPATH = 'wall3gap.png'
-NUM_NODES = 2
+MAP_FILEPATH = 'mediumComplexity.png'
+NUM_NODES = 1
+SCALE = 1/3
+SWARM_SIZE = 2
+MAX_ITER = 1
 
+# read image file, print WIDTH, HEIGHT and dimensions (RGBA == 4 dimensions)
+FLOOR_MAP = FloorMap(MAP_FILEPATH)
+(WIDTH, HEIGHT) = (FLOOR_MAP.width, FLOOR_MAP.height)
+MAP_ARRAY = FLOOR_MAP.array
+print("Read Image: ", MAP_FILEPATH, "  WIDTH: ", WIDTH, "  HEIGHT: ", HEIGHT)
 
-# read image file, print width, height and dimensions (RGBA == 4 dimensions)
-floor_map = FloorMap(MAP_FILEPATH)
-(width, height) = (floor_map.width, floor_map.height)
-MAP_ARRAY = floor_map.get_array()
-print("Read Image: ", MAP_FILEPATH, "  Width: ", width, "  Height: ", height)
+MAP_IMG = FLOOR_MAP.get_transparent_img()
+WALLS = FLOOR_MAP.get_walls()
+print(WALLS)
 
-MAP_IMG = floor_map.get_transparent_img()
-walls = floor_map.get_walls()
+LB = np.full((NUM_NODES*2), 0)          # lower bounds of fitness lanscape
+UB = np.empty((NUM_NODES*2))
+UB[::2] = WIDTH
+UB[1::2] = HEIGHT   # upper bounds of fitness lanscape
+
+# Create new fitnessLandscape object
+FIT_LANDSCAPE = FitnessLandscape(WIDTH, HEIGHT, NUM_NODES, MAP_ARRAY, WALLS, SCALE)
+
+# run pso on fitnessLandscape object
+# optimal positions stored as array in x_optimals eg. [x1, y1, x2, y2]
+OPTIMAL_POSITIONS, FITNESS = pso(
+    FIT_LANDSCAPE.getFitness,
+    LB,
+    UB,
+    swarmsize=SWARM_SIZE,
+    maxiter=MAX_ITER,
+    debug=True,
+    phip=0.4,
+    phig=0.4,
+    omega=0.6)
+
+print("Position optimals: ", OPTIMAL_POSITIONS)
+print("Optimal Fitness: ", FITNESS)
+
+#create get z values(fitness values) using the optimal x y positions
+FIT_LANDSCAPE.getFitness([46, 89])
+
+Z = FIT_LANDSCAPE.z # 2D array of fitness values
+X = FIT_LANDSCAPE.x # 1D array of x axis values
+Y = FIT_LANDSCAPE.y # 1D array of y axis values
+print(Z.shape)
+print(X.shape)
+print(Y.shape)
+levels = np.linspace(-75,-23,100)
+# create contour plot from x, y and z arrays
+fig2, axis2 = plt.subplots()
+cp = axis2.contourf(Y, X, Z, cmap='jet', levels = levels)
+cb = fig2.colorbar(cp)  # contour plot legend bar
 
 # overlay with map image
-plt.imshow(MAP_IMG, zorder=10)
+axis2.imshow(MAP_IMG, zorder=10)
 
-lb = np.full((NUM_NODES*2), 0)          # lower bounds of fitness lanscape
-ub = np.full((NUM_NODES*2), width-1)      # upper bounds of fitness lanscape
-# get fitness values, store in z
-fit_landscape = FitnessLandscape(width, height, NUM_NODES, MAP_ARRAY, walls)
-#ieqcons = [fit_landscape.check_pos]
-x_optimals, fitness = pso(fit_landscape.getFitness, lb, ub, swarmsize = 200, maxiter = 1, debug = True)
-print("x_optimals: ", x_optimals)
-fit_landscape.getFitness(x_optimals)  #get z of best fitness
-print(fit_landscape.fitness)
-z = fit_landscape.getZ()
-x = fit_landscape.getX()
-y = fit_landscape.getY()
-
-# create contour plot from z, x and y
-cplot = plt.contourf(x, y, z, cmap = 'gist_rainbow', levels = 100)
-plt.colorbar()
-plt.scatter(x_optimals[1::2], x_optimals[0::2], c='m')
+#plot nodes
+#plt.scatter(optimal_positions[1::2], optimal_positions[0::2], c='m')
 plt.show()

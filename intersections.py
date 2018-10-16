@@ -1,4 +1,11 @@
-#https://bryceboe.com/2006/10/23/line-segment-intersection-algorithm/
+""" 
+Calculates whether two lines A and B intersect. 
+A1: start point of line A
+A2: end point of line A
+B1: start point of line B
+B2: end point of line B
+Code taken from: https://bryceboe.com/2006/10/23/line-segment-intersection-algorithm/
+"""
 
 import math
 

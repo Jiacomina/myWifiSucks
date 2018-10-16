@@ -1,5 +1,6 @@
 from functools import partial
 import numpy as np
+import matplotlib.pyplot as plt
 
 def _obj_wrapper(func, args, kwargs, x):
     return func(x, *args, **kwargs)
@@ -162,10 +163,15 @@ def pso(func, lb, ub, ieqcons=[], f_ieqcons=None, args=(), kwargs={},
        
     # Initialize the particle's velocity
     v = vlow + np.random.rand(S, D)*(vhigh - vlow)
-       
+    fig1, axis1 = plt.subplots()
+    axis1.axis([0, ub[0], 0, ub[1]])  
     # Iterate until termination criterion met ##################################
     it = 1
     while it <= maxiter:
+        x_values = [item[0] for item in x]
+        y_values = [item[1] for item in x]
+        axis1.scatter(x_values, y_values)
+        plt.pause(0.05)
         rp = np.random.uniform(size=(S, D))
         rg = np.random.uniform(size=(S, D))
 
@@ -194,6 +200,8 @@ def pso(func, lb, ub, ieqcons=[], f_ieqcons=None, args=(), kwargs={},
 
         # Compare swarm's best position with global best position
         i_min = np.argmin(fp)
+        print('New position for swarm at iteration {:}: {:} {:}'\
+                    .format(it, p[i_min, :], fp[i_min]))
         if fp[i_min] < fg:
             if debug:
                 print('New best for swarm at iteration {:}: {:} {:}'\
@@ -223,7 +231,7 @@ def pso(func, lb, ub, ieqcons=[], f_ieqcons=None, args=(), kwargs={},
         if debug:
             print('Best after iteration {:}: {:} {:}'.format(it, g, fg))
         it += 1
-
+    #fig1.show()
     print('Stopping search: maximum iterations reached --> {:}'.format(maxiter))
     
     if not is_feasible(g):
