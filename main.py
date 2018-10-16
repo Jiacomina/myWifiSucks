@@ -3,12 +3,13 @@ Program to calculate optimal wifi node positioning using PSO
 Floor plan can be can be read in as a greyscale image file e.g. png.
 """
 import matplotlib.pyplot as plt
+from matplotlib.ticker import MaxNLocator
 import numpy as np
 from pyswarm import pso
 from floorMap import FloorMap
 from fitness import FitnessLandscape
 
-MAP_FILEPATH = 'mediumComplexity.png'
+MAP_FILEPATH = 'wall3.png'
 NUM_NODES = 1
 SCALE = 1/3
 SWARM_SIZE = 2
@@ -26,8 +27,8 @@ print(WALLS)
 
 LB = np.full((NUM_NODES*2), 0)          # lower bounds of fitness lanscape
 UB = np.empty((NUM_NODES*2))
-UB[::2] = WIDTH
-UB[1::2] = HEIGHT   # upper bounds of fitness lanscape
+UB[::2] = WIDTH - 1
+UB[1::2] = HEIGHT - 1  # upper bounds of fitness lanscape
 
 # Create new fitnessLandscape object
 FIT_LANDSCAPE = FitnessLandscape(WIDTH, HEIGHT, NUM_NODES, MAP_ARRAY, WALLS, SCALE)
@@ -49,15 +50,13 @@ print("Position optimals: ", OPTIMAL_POSITIONS)
 print("Optimal Fitness: ", FITNESS)
 
 #create get z values(fitness values) using the optimal x y positions
-FIT_LANDSCAPE.getFitness([46, 89])
+FIT_LANDSCAPE.getFitness(OPTIMAL_POSITIONS)
 
 Z = FIT_LANDSCAPE.z # 2D array of fitness values
 X = FIT_LANDSCAPE.x # 1D array of x axis values
 Y = FIT_LANDSCAPE.y # 1D array of y axis values
-print(Z.shape)
-print(X.shape)
-print(Y.shape)
-levels = np.linspace(-75,-23,100)
+
+levels = MaxNLocator(nbins=100).tick_values(Z.min(), 0)
 # create contour plot from x, y and z arrays
 fig2, axis2 = plt.subplots()
 cp = axis2.contourf(Y, X, Z, cmap='jet', levels = levels)

@@ -54,6 +54,8 @@ class FitnessLandscape():
             for x_point in self.x:
                 for y_point in self.y:
                     # strength in dbm
+                    if not self.check_pos([x_point, y_point]):
+                        continue
                     strength = self.getStrength(node_x, node_y, x_point, y_point)
                     previous_strength = self.z[int(x_point)][int(y_point)]
                     if(strength > previous_strength or previous_strength == 0):
@@ -71,8 +73,10 @@ class FitnessLandscape():
         for index in range(0, num_values, 2):
             x_coord = x_values[index]
             y_coord = x_values[index + 1]
-            if self.map_array[int(x_coord)][int(y_coord)] == 0:
-                return 0
+            if self.map_array[int(x_coord)][int(y_coord)] == 0:  # is a wall
+                return -1
+            if self.map_array[int(x_coord)][int(y_coord)] == 128:  # is no go zone
+                return -1
         return 1
 
     def getStrength(self, x_node, y_node, X1, Y1):

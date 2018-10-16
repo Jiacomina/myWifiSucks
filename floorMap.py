@@ -23,7 +23,7 @@ class FloorMap():
         width, height = img.size
         for y in range(height):
             for x in range(width):
-                if pixdata[x, y] == (255, 255, 255, 255):
+                if pixdata[x, y] == (255, 255, 255, 255) or pixdata[x, y] == (128, 128, 128, 255):
                     pixdata[x, y] = (255, 255, 255, 0)
         arr = np.array(img)
         return arr
@@ -50,8 +50,10 @@ class FloorMap():
                         parse_y = parse_y+1
                     if go_y:
                         end = [x, parse_y - 1]
+                        start[1] += -0.999999
+                        end[1] += 0.99999999
                         walls.append([start, end])
-                        axis3.plot([start[1]-0.99, end[1]+0.99], [start[0], end[0]])
+                        axis3.plot([start[1], end[1]], [start[0], end[0]])
         for x in range(1, width-1):
             for y in range(1, height-1):
                 if arr_copy[x][y] == 0:
@@ -64,7 +66,9 @@ class FloorMap():
                         parse_x = parse_x+1
                     if go_x:
                         end = [parse_x-1, y]
+                        start[0] += -0.999999
+                        end[0] += 0.99999999
                         walls.append([start, end])
-                        axis3.plot([start[1], end[1]], [start[0]-0.99, end[0]+0.99])
+                        axis3.plot([start[1], end[1]], [start[0], end[0]])
         plt.show()  
         return walls
