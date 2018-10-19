@@ -164,13 +164,14 @@ def pso(func, lb, ub, ieqcons=[], f_ieqcons=None, args=(), kwargs={},
     # Initialize the particle's velocity
     v = vlow + np.random.rand(S, D)*(vhigh - vlow)
     fig1, axis1 = plt.subplots()
-    axis1.axis([0, ub[0], 0, ub[1]])  
+    axis1.axis([0, ub[1], 0, ub[0]])  
+    fig1.gca().invert_yaxis()
     # Iterate until termination criterion met ##################################
     it = 1
     while it <= maxiter:
         x_values = [item[0] for item in x]
         y_values = [item[1] for item in x]
-        axis1.scatter(x_values, y_values)
+        axis1.scatter(y_values, x_values)
         plt.pause(0.05)
         rp = np.random.uniform(size=(S, D))
         rg = np.random.uniform(size=(S, D))

@@ -2,6 +2,7 @@
 Program to calculate optimal wifi node positioning using PSO
 Floor plan can be can be read in as a greyscale image file e.g. png.
 """
+import sys
 import matplotlib.pyplot as plt
 from matplotlib.ticker import MaxNLocator
 import numpy as np
@@ -9,11 +10,14 @@ from pyswarm import pso
 from floorMap import FloorMap
 from fitness import FitnessLandscape
 
-MAP_FILEPATH = './Images/wall3.png'
+MAP_FILEPATH = './Images/wall1nogo.png'
 NUM_NODES = 1
 SCALE = 1/3
-SWARM_SIZE = 2
-MAX_ITER = 1
+SWARM_SIZE = 50
+MAX_ITER = 6
+
+if len(sys.argv) > 1:
+    MAP_FILEPATH = './Images/' + sys.argv[1]
 
 # read image file, print WIDTH, HEIGHT and dimensions (RGBA == 4 dimensions)
 FLOOR_MAP = FloorMap(MAP_FILEPATH)
@@ -25,10 +29,10 @@ MAP_IMG = FLOOR_MAP.get_transparent_img()
 WALLS = FLOOR_MAP.get_walls()
 print(WALLS)
 
-LB = np.full((NUM_NODES*2), 0)          # lower bounds of fitness lanscape
+LB = np.full((NUM_NODES*2), 1)          # lower bounds of fitness lanscape
 UB = np.empty((NUM_NODES*2))
-UB[::2] = WIDTH - 1
-UB[1::2] = HEIGHT - 1  # upper bounds of fitness lanscape
+UB[::2] = WIDTH - 2
+UB[1::2] = HEIGHT - 2  # upper bounds of fitness lanscape
 
 # Create new fitnessLandscape object
 FIT_LANDSCAPE = FitnessLandscape(WIDTH, HEIGHT, NUM_NODES, MAP_ARRAY, WALLS, SCALE)
@@ -42,9 +46,10 @@ OPTIMAL_POSITIONS, FITNESS = pso(
     swarmsize=SWARM_SIZE,
     maxiter=MAX_ITER,
     debug=True,
-    phip=0.4,
-    phig=0.4,
-    omega=0.6)
+    phip=0.3,
+    phig=0.6,
+    omega=0.6,
+    f_ieqcons=FIT_LANDSCAPE.check_pos)
 
 print("Position optimals: ", OPTIMAL_POSITIONS)
 print("Optimal Fitness: ", FITNESS)
@@ -56,10 +61,10 @@ Z = FIT_LANDSCAPE.z # 2D array of fitness values
 X = FIT_LANDSCAPE.x # 1D array of x axis values
 Y = FIT_LANDSCAPE.y # 1D array of y axis values
 
-levels = MaxNLocator(nbins=100).tick_values(Z.min(), 0)
+levels = MaxNLocator(nbins=100).tick_values(Z.min(), -20)
 # create contour plot from x, y and z arrays
 fig2, axis2 = plt.subplots()
-cp = axis2.contourf(Y, X, Z, cmap='jet', levels = levels)
+cp = axis2.contourf(Y, X, Z, cmap='gist_rainbow', levels = levels)
 cb = fig2.colorbar(cp)  # contour plot legend bar
 
 # overlay with map image

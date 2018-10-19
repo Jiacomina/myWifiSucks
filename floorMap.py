@@ -1,6 +1,7 @@
 """
 Reads in image from file name and returns as an array
 """
+from sys import exit
 from PIL import Image
 import numpy as np
 import matplotlib.pyplot as plt
@@ -15,6 +16,11 @@ class FloorMap():
         arr = np.array(img)
         (self.width, self.height) = arr.shape
         self.array = arr
+        for x in range(0, self.width):
+            for y in range(0, self.height):
+                if(arr[x][y] not in [128, 0, 255]):
+                    print("IMAGE CONTAINS INVALID VALUE", arr[x][y])
+                    exit()
 
     def get_transparent_img(self):
         """ makes white image pixels transparent """
@@ -23,7 +29,7 @@ class FloorMap():
         width, height = img.size
         for y in range(height):
             for x in range(width):
-                if pixdata[x, y] == (255, 255, 255, 255) or pixdata[x, y] == (128, 128, 128, 255):
+                if pixdata[x, y] == (255, 255, 255, 255):
                     pixdata[x, y] = (255, 255, 255, 0)
         arr = np.array(img)
         return arr

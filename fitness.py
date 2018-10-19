@@ -26,6 +26,7 @@ class FitnessLandscape():
         self.width = width
         self.height = height
         self.map_array = map_array
+        print(map_array)
         self.walls = walls
         self.scale = scale
         self.minStrength = -50
@@ -36,9 +37,10 @@ class FitnessLandscape():
         area_sum = 0
         rows = self.z.shape[0]
         cols = self.z.shape[1]
-        for x in range(0, cols - 1):
-            for y in range(0, rows -1):
-                area_sum += self.z[y][x] #**********
+        for x in range(0, rows - 1):
+            for y in range(0, cols -1):
+                if(self.check_no_go_zone(x,y)):  # not in a no go zone
+                    area_sum += self.z[x][y] #**********
         return area_sum
 
     def getFitness(self, x_values):
@@ -54,8 +56,6 @@ class FitnessLandscape():
             for x_point in self.x:
                 for y_point in self.y:
                     # strength in dbm
-                    if not self.check_pos([x_point, y_point]):
-                        continue
                     strength = self.getStrength(node_x, node_y, x_point, y_point)
                     previous_strength = self.z[int(x_point)][int(y_point)]
                     if(strength > previous_strength or previous_strength == 0):
@@ -65,19 +65,33 @@ class FitnessLandscape():
 
         return fitness
 
+    def check_no_go_zone(self, x_coord, y_cord):
+        return self.map_array[x_coord][y_cord] != 128
+
     def check_pos(self, x_values):
         """ checks if array x_values contains valid room positions.
         Returns 1 if position is on a wall, or if it is a 'no-go' zone. """
-
         num_values = len(x_values)
+        x_values = (np.rint(x_values))
+        x_values = x_values.astype(int)
         for index in range(0, num_values, 2):
             x_coord = x_values[index]
             y_coord = x_values[index + 1]
-            if self.map_array[int(x_coord)][int(y_coord)] == 0:  # is a wall
-                return -1
-            if self.map_array[int(x_coord)][int(y_coord)] == 128:  # is no go zone
-                return -1
-        return 1
+            maxWidth = self.width - 1
+            maxHeight = self.height - 1
+            if x_coord == 0 or y_coord == 0:
+                print(x_coord, y_coord, " On edge 0")
+                return np.full(num_values, -1)
+            elif (x_coord == maxWidth or y_coord == maxWidth) or (x_coord == maxHeight or y_coord == maxHeight):
+                print(x_coord, y_coord, " On edge max")
+                return np.full(num_values, -1)
+            elif self.map_array[x_coord][y_coord] == 0:  # is a wall
+                print(x_coord, y_coord, " is a wall")
+                return np.full(num_values, -1)
+            elif self.map_array[x_coord][y_coord] == 128:  # is no go zone
+                print(x_coord, y_coord, " is in no go zone")
+                return np.full(num_values, -2)
+        return np.full(num_values, 1)
 
     def getStrength(self, x_node, y_node, X1, Y1):
         """Signal strength loss equation with distance drop-off and walls (Kelly's paper)
