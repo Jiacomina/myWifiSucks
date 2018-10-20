@@ -17,25 +17,10 @@ NUM_NODES = 1
 SCALE = 1
 SWARM_SIZE = 80
 MAX_ITER = 20    # make sure either max_iter and/or min step is included in the pso() function below
-MIN_STEP = 0.1
+MIN_STEP = 0.25
 
 if len(sys.argv) > 1:
     MAP_FILEPATH = './Images/' + sys.argv[1]
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 # read image file, print WIDTH, HEIGHT and dimensions (RGBA == 4 dimensions)
 FLOOR_MAP = FloorMap(MAP_FILEPATH)
 (WIDTH, HEIGHT) = (FLOOR_MAP.width, FLOOR_MAP.height)
@@ -43,7 +28,8 @@ MAP_ARRAY = FLOOR_MAP.array
 print(MAP_ARRAY)
 print("Read Image: ", MAP_FILEPATH, "  WIDTH: ", WIDTH, "  HEIGHT: ", HEIGHT)
 
-MAP_IMG = FLOOR_MAP.get_transparent_img()
+MAP_IMG = FLOOR_MAP.image
+WALL_IMG = FLOOR_MAP.get_transparent_img()
 WALLS = FLOOR_MAP.get_walls()
 print(WALLS)
 
@@ -91,7 +77,7 @@ cp = axis2.contourf(Y, X, Z, cmap='gist_rainbow', levels = levels)
 cb = fig2.colorbar(cp)  # contour plot legend bar
 
 # overlay with map image
-axis2.imshow(MAP_IMG, zorder=10)
+axis2.imshow(WALL_IMG, zorder=10)
 
 #plot nodes
 #plt.scatter(optimal_positions[1::2], optimal_positions[0::2], c='m')
