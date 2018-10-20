@@ -3,83 +3,133 @@ Program to calculate optimal wifi node positioning using PSO
 Floor plan can be can be read in as a greyscale image file e.g. png.
 """
 import sys
-import matplotlib
-matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 from matplotlib.ticker import MaxNLocator
 import numpy as np
 from pyswarm import pso
 from floorMap import FloorMap
 from fitness import FitnessLandscape
+import itertools
 
-MAP_FILEPATH = './Images/wall3priorities.png'
+MAP_FILEPATH = './Images/wall1nogo.png'
 NUM_NODES = 1
-SCALE = 1
-SWARM_SIZE = 80
-MAX_ITER = 20    # make sure either max_iter and/or min step is included in the pso() function below
-MIN_STEP = 0.25
+SCALE = 1/3
+SWARM_SIZE = 50
+MAX_ITER = 6
 
 if len(sys.argv) > 1:
     MAP_FILEPATH = './Images/' + sys.argv[1]
+
 # read image file, print WIDTH, HEIGHT and dimensions (RGBA == 4 dimensions)
 FLOOR_MAP = FloorMap(MAP_FILEPATH)
 (WIDTH, HEIGHT) = (FLOOR_MAP.width, FLOOR_MAP.height)
 MAP_ARRAY = FLOOR_MAP.array
-print(MAP_ARRAY)
 print("Read Image: ", MAP_FILEPATH, "  WIDTH: ", WIDTH, "  HEIGHT: ", HEIGHT)
 
-MAP_IMG = FLOOR_MAP.image
-WALL_IMG = FLOOR_MAP.get_transparent_img()
+MAP_IMG = FLOOR_MAP.get_transparent_img()
 WALLS = FLOOR_MAP.get_walls()
-print(WALLS)
+print(WALLS)  # How is this printing an array? Does python automatically do this?
 
-LB = np.full((NUM_NODES*2), 1)          # lower bounds of fitness lanscape
+LB = np.full((NUM_NODES*2), 1)          # lower bounds of fitness landscape, start at 1, *2 for x y [x1 = 1 y1 =1]
 UB = np.empty((NUM_NODES*2))
-UB[::2] = WIDTH - 2
-UB[1::2] = HEIGHT - 2  # upper bounds of fitness lanscape
+UB[::2] = WIDTH - 2  # every 2nd element, y for each node, equals width - 2
+UB[1::2] = HEIGHT - 2  # the upper bound for each x coordinate of every node = height - 2
+
 
 # Create new fitnessLandscape object
 FIT_LANDSCAPE = FitnessLandscape(WIDTH, HEIGHT, NUM_NODES, MAP_ARRAY, WALLS, SCALE)
 
+# attempt brute force computation
+
+print("Attempting brute force")
+
+# start by creating an array "array_of_permutations" that has all the possible and allowed x and y values
+# for node positions. Have x and y values for all node positions, even if they are repeated
+
+# btw allowing repetitions makes code inefficient, but for now not a big deal. Can optimise later if time - again
+# shouldn't matter too much
+
+y_length = WIDTH - 2
+x_length = HEIGHT - 2
+a = 1
+b = 1
+index = 0
+array_of_permutations = []
+
+while index < x_length:
+    array_of_permutations.append(a)
+    a = a + 1
+    index = index + 1
+
+while index < (x_length + y_length):
+    array_of_permutations.append(b)
+    b = b + 1
+    index = index + 1
+
+# technically we created an array with x y values for one node, extend this array for all nodes
+
+node = 2
+while node <= NUM_NODES:
+    array_of_permutations.extend(array_of_permutations)
+    node = node + 1
+
+print("array of permutations: ", array_of_permutations)
+
+# create all the possible x y values for our map for all the nodes
+
+all_x_y_pos = itertools.permutations(array_of_permutations, NUM_NODES * 2)
+# for pos in all_x_y_pos:
+    # print(pos)
+
+# compute fitness for all x y points for all nodes and find best position
+
+final_fitness = 0  # variable to store our best fitness value
+previous_fitness = -1
+best_pos_for_nodes = []
+for pos in all_x_y_pos:
+    fitness = FIT_LANDSCAPE.getFitness(pos)
+    if fitness > previous_fitness:
+        final_fitness = fitness
+        previous_fitness = fitness
+        best_pos_for_nodes = pos
+
+print("best position for nodes: ", pos, "\tfitness: ", final_fitness)
+
+# maybe some visualization here, sorry still too dumb at python to do quickly :(
+
 # run pso on fitnessLandscape object
 # optimal positions stored as array in x_optimals eg. [x1, y1, x2, y2]
-
-# run pso
-#OPTIONS: stop pso after either minstep=MIN_STEP and/or  maxiter=MAX_ITER,
 OPTIMAL_POSITIONS, FITNESS = pso(
     FIT_LANDSCAPE.getFitness,
     LB,
     UB,
     swarmsize=SWARM_SIZE,
-    minstep=MIN_STEP,
     maxiter=MAX_ITER,
     debug=True,
-    phip=0.2,
-    phig=0.4,
-    omega=0.5,
-    f_ieqcons=FIT_LANDSCAPE.check_pos,
-    map_img = MAP_IMG)
+    phip=0.3,
+    phig=0.6,
+    omega=0.6,
+    f_ieqcons=FIT_LANDSCAPE.check_pos)
 
 print("Position optimals: ", OPTIMAL_POSITIONS)
 print("Optimal Fitness: ", FITNESS)
 
-#create get z values(fitness values) using the optimal x y positions
+# create get z values(fitness values) using the optimal x y positions
 FIT_LANDSCAPE.getFitness(OPTIMAL_POSITIONS)
 
 Z = FIT_LANDSCAPE.z # 2D array of fitness values
 X = FIT_LANDSCAPE.x # 1D array of x axis values
 Y = FIT_LANDSCAPE.y # 1D array of y axis values
 
-levels = MaxNLocator(nbins=100).tick_values(int(Z.min())-1, int(Z.max())+1)
+levels = MaxNLocator(nbins=100).tick_values(Z.min(), -20)
 # create contour plot from x, y and z arrays
 fig2, axis2 = plt.subplots()
 cp = axis2.contourf(Y, X, Z, cmap='gist_rainbow', levels = levels)
 cb = fig2.colorbar(cp)  # contour plot legend bar
 
 # overlay with map image
-axis2.imshow(WALL_IMG, zorder=10)
+axis2.imshow(MAP_IMG, zorder=10)
 
-#plot nodes
-#plt.scatter(optimal_positions[1::2], optimal_positions[0::2], c='m')
-fig2.savefig("./plotframes/contourPlot.png", dpi=250)
+# plot nodes
+# plt.scatter(optimal_positions[1::2], optimal_positions[0::2], c='m')
 plt.show()
