@@ -43,7 +43,7 @@ print(WALLS)
 
 # Create new fitnessLandscape object
 FIT_LANDSCAPE = FitnessLandscape(WIDTH, HEIGHT, NUM_NODES, MAP_ARRAY, WALLS, SCALE)
-best_fitness = 0
+best_fitness = FIT_LANDSCAPE.getFitness([0, 0])
 best_x = 0
 best_y = 0
 fitness_array = np.zeros([WIDTH, HEIGHT])
@@ -52,16 +52,20 @@ for x in range(0, WIDTH):
     for y in range(0, HEIGHT):
         fitness = FIT_LANDSCAPE.getFitness([x, y])
         fitness_array[x][y] = fitness
-        if best_fitness < fitness:
+        if best_fitness > fitness:
             best_fitness = fitness
             best_x = x
             best_y = y
-percent_fitness_array = fitness_array/best_fitness
-
+max_fitness = fitness_array.max()
+print(max_fitness)
+print(best_fitness)
+percent_fitness_array = 1-(fitness_array-best_fitness)/(max_fitness - best_fitness)
+print(percent_fitness_array)
+print("Optimal Position: X:", best_x, "Y:", best_y)
 # create contour plot from x, y and z arrays
 fig2, axis2 = plt.subplots()
 levels = MaxNLocator(nbins=100).tick_values(0, 1)
-cp = axis2.contourf(range(0,HEIGHT), range(0,WIDTH), percent_fitness_array, cmap='gist_rainbow', levels = levels)
+cp = axis2.contourf(range(0,HEIGHT), range(0,WIDTH), percent_fitness_array, cmap='gnuplot', levels = levels)
 cb = fig2.colorbar(cp)  # contour plot legend bar
 
 # overlay with map image
