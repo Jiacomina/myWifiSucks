@@ -4,5 +4,5 @@
 env/
 .vscode/settings.json
 /venv/
-/plotframes-*
 /plotframes/*
+.DS_Store
