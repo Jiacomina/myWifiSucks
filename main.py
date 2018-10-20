@@ -16,11 +16,25 @@ MAP_FILEPATH = './Images/wall3priorities.png'
 NUM_NODES = 1
 SCALE = 1
 SWARM_SIZE = 80
-MAX_ITER = 25    # make sure either max_iter and/or min step is included in the pso() function below
+MAX_ITER = 20    # make sure either max_iter and/or min step is included in the pso() function below
 MIN_STEP = 0.1
 
 if len(sys.argv) > 1:
     MAP_FILEPATH = './Images/' + sys.argv[1]
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 # read image file, print WIDTH, HEIGHT and dimensions (RGBA == 4 dimensions)
 FLOOR_MAP = FloorMap(MAP_FILEPATH)
