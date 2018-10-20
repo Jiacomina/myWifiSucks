@@ -73,11 +73,11 @@ class FitnessLandscape():
         The default multiplier (white pixels) is 1'''
         pixel_value = self.map_array[x_coord][y_coord]
         if pixel_value == 255 or pixel_value == 0 or pixel_value == 128:
-            return 1
+            return 10
         if pixel_value == 76:  # SECOND PRIORITY = RED
-            return 2/3
+            return 8
         if pixel_value == 149:  # FIRST PRIORITY = GREEN
-            return 1/3
+            return 1
         else:
             print("Image pixel has unknown value: ", pixel_value)
             exit()

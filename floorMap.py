@@ -33,8 +33,10 @@ class FloorMap():
             for x in range(width):
                 if pixdata[x, y] == (255, 255, 255, 255):
                     pixdata[x, y] = (255, 255, 255, 0)
-                # if pixdata[x, y] == (128, 128, 128, 255):   # make grey no go zone pixels transparent
-                #     pixdata[x, y] = (255, 255, 255, 0)
+                if pixdata[x, y] == (255, 0, 0, 255):   # make red pixels transparent
+                    pixdata[x, y] = (255, 255, 255, 0)
+                if pixdata[x, y] == (0, 255, 0, 255):   # make green pixels transparent
+                    pixdata[x, y] = (255, 255, 255, 0)
         arr = np.array(img)
         return arr
 
