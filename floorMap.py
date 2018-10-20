@@ -20,7 +20,7 @@ class FloorMap():
         self.array = arr
         for x in range(0, self.width):
             for y in range(0, self.height):
-                if(arr[x][y] not in [128, 0, 255]):
+                if(arr[x][y] not in [128, 0, 255, 76, 149]):
                     print("IMAGE CONTAINS INVALID VALUE", arr[x][y])
                     exit()
 
