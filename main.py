@@ -3,6 +3,8 @@ Program to calculate optimal wifi node positioning using PSO
 Floor plan can be can be read in as a greyscale image file e.g. png.
 """
 import sys
+import matplotlib
+matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 from matplotlib.ticker import MaxNLocator
 import numpy as np
@@ -10,11 +12,12 @@ from pyswarm import pso
 from floorMap import FloorMap
 from fitness import FitnessLandscape
 
-MAP_FILEPATH = './Images/wall1nogo.png'
+MAP_FILEPATH = './Images/wall3priorities.png'
 NUM_NODES = 1
-SCALE = 1/3
-SWARM_SIZE = 50
-MAX_ITER = 6
+SCALE = 1
+SWARM_SIZE = 80
+MAX_ITER = 20    # make sure either max_iter or min step is included in the pso() function below
+MIN_STEP = 0.1
 
 if len(sys.argv) > 1:
     MAP_FILEPATH = './Images/' + sys.argv[1]
@@ -23,6 +26,7 @@ if len(sys.argv) > 1:
 FLOOR_MAP = FloorMap(MAP_FILEPATH)
 (WIDTH, HEIGHT) = (FLOOR_MAP.width, FLOOR_MAP.height)
 MAP_ARRAY = FLOOR_MAP.array
+print(MAP_ARRAY)
 print("Read Image: ", MAP_FILEPATH, "  WIDTH: ", WIDTH, "  HEIGHT: ", HEIGHT)
 
 MAP_IMG = FLOOR_MAP.get_transparent_img()
@@ -39,17 +43,21 @@ FIT_LANDSCAPE = FitnessLandscape(WIDTH, HEIGHT, NUM_NODES, MAP_ARRAY, WALLS, SCA
 
 # run pso on fitnessLandscape object
 # optimal positions stored as array in x_optimals eg. [x1, y1, x2, y2]
+
+# run pso
+#OPTIONS: stop pso after either minstep=MIN_STEP or  maxiter=MAX_ITER,
 OPTIMAL_POSITIONS, FITNESS = pso(
     FIT_LANDSCAPE.getFitness,
     LB,
     UB,
     swarmsize=SWARM_SIZE,
-    maxiter=MAX_ITER,
+    minstep=MIN_STEP,
     debug=True,
-    phip=0.3,
-    phig=0.6,
-    omega=0.6,
-    f_ieqcons=FIT_LANDSCAPE.check_pos)
+    phip=0.2,
+    phig=0.4,
+    omega=0.5,
+    f_ieqcons=FIT_LANDSCAPE.check_pos,
+    map_img = MAP_IMG)
 
 print("Position optimals: ", OPTIMAL_POSITIONS)
 print("Optimal Fitness: ", FITNESS)
@@ -61,7 +69,7 @@ Z = FIT_LANDSCAPE.z # 2D array of fitness values
 X = FIT_LANDSCAPE.x # 1D array of x axis values
 Y = FIT_LANDSCAPE.y # 1D array of y axis values
 
-levels = MaxNLocator(nbins=100).tick_values(Z.min(), -20)
+levels = MaxNLocator(nbins=100).tick_values(int(Z.min())-1, int(Z.max())+1)
 # create contour plot from x, y and z arrays
 fig2, axis2 = plt.subplots()
 cp = axis2.contourf(Y, X, Z, cmap='gist_rainbow', levels = levels)
@@ -72,4 +80,5 @@ axis2.imshow(MAP_IMG, zorder=10)
 
 #plot nodes
 #plt.scatter(optimal_positions[1::2], optimal_positions[0::2], c='m')
+fig2.savefig("./plotframes/contourPlot.png", dpi=250)
 plt.show()

@@ -31,6 +31,7 @@ class FitnessLandscape():
         self.scale = scale
         self.minStrength = -50
         print("Num Nodes: ", self.num_nodes)
+        print("Scale: ", self.scale)
 
     def getAreaSum(self):
         """ Calculates and returns the sum of fitness for all cells in the map"""
@@ -39,8 +40,8 @@ class FitnessLandscape():
         cols = self.z.shape[1]
         for x in range(0, rows - 1):
             for y in range(0, cols -1):
-                if(self.check_no_go_zone(x,y)):  # not in a no go zone
-                    area_sum += self.z[x][y] #**********
+                priority_multi = self.priority_multiplier(x, y)
+                area_sum += self.z[x][y]*priority_multi
         return area_sum
 
     def getFitness(self, x_values):
@@ -61,12 +62,25 @@ class FitnessLandscape():
                     if(strength > previous_strength or previous_strength == 0):
                         self.z[int(x_point)][int(y_point)] = strength
         fitness = -1 * self.getAreaSum()
-        print("x_values: ", x_values, "fitness: ", fitness)
 
         return fitness
 
-    def check_no_go_zone(self, x_coord, y_cord):
-        return self.map_array[x_coord][y_cord] != 128
+    def priority_multiplier(self, x_coord, y_coord):
+        ''' Returns the mupltiplying factor for priorities. 
+        Because pyswarm MINIMISES the fitness, higher priority should produce lower fitness.
+        Therefore first priority (green pixels) returns a multiplying factor of 1/3 and
+        second priority (red pixels) returns a multiplying factor of 2/3. 
+        The default multiplier (white pixels) is 1'''
+        pixel_value = self.map_array[x_coord][y_coord]
+        if pixel_value == 255 or pixel_value == 0:
+            return 1
+        if pixel_value == 79:  # SECOND PRIORITY = RED
+            return 2/3
+        if pixel_value == 149:  # FIRST PRIORITY = GREEN
+            return 1/3
+        else:
+            print("Image pixel has unknown value: ", pixel_value)
+            exit()
 
     def check_pos(self, x_values):
         """ checks if array x_values contains valid room positions.
@@ -80,16 +94,16 @@ class FitnessLandscape():
             maxWidth = self.width - 1
             maxHeight = self.height - 1
             if x_coord == 0 or y_coord == 0:
-                print(x_coord, y_coord, " On edge 0")
+                # print(x_coord, y_coord, " On edge 0")
                 return np.full(num_values, -1)
             elif (x_coord == maxWidth or y_coord == maxWidth) or (x_coord == maxHeight or y_coord == maxHeight):
-                print(x_coord, y_coord, " On edge max")
+                # print(x_coord, y_coord, " On edge max")
                 return np.full(num_values, -1)
             elif self.map_array[x_coord][y_coord] == 0:  # is a wall
-                print(x_coord, y_coord, " is a wall")
+                # print(x_coord, y_coord, " is a wall")
                 return np.full(num_values, -1)
             elif self.map_array[x_coord][y_coord] == 128:  # is no go zone
-                print(x_coord, y_coord, " is in no go zone")
+                # print(x_coord, y_coord, " is in no go zone")
                 return np.full(num_values, -2)
         return np.full(num_values, 1)
 
@@ -122,8 +136,8 @@ class FitnessLandscape():
         #dist = straight-line distance from router.
         # Multiply by room mesurement scale factor
         # (so that image file can be small whilst still getting large maps)
-        x_delta = x_node - X1
-        y_delta = y_node - Y1
+        x_delta = (x_node - X1)*self.scale
+        y_delta = (y_node - Y1)*self.scale
         dist = sqrt((x_delta)**2 + (y_delta)**2)
         #sig_stren is the signal strength at pixel
         if dist == 0:
