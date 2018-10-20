@@ -16,7 +16,7 @@ MAP_FILEPATH = './Images/wall3priorities.png'
 NUM_NODES = 1
 SCALE = 1
 SWARM_SIZE = 80
-MAX_ITER = 20    # make sure either max_iter or min step is included in the pso() function below
+MAX_ITER = 25    # make sure either max_iter and/or min step is included in the pso() function below
 MIN_STEP = 0.1
 
 if len(sys.argv) > 1:
@@ -45,13 +45,14 @@ FIT_LANDSCAPE = FitnessLandscape(WIDTH, HEIGHT, NUM_NODES, MAP_ARRAY, WALLS, SCA
 # optimal positions stored as array in x_optimals eg. [x1, y1, x2, y2]
 
 # run pso
-#OPTIONS: stop pso after either minstep=MIN_STEP or  maxiter=MAX_ITER,
+#OPTIONS: stop pso after either minstep=MIN_STEP and/or  maxiter=MAX_ITER,
 OPTIMAL_POSITIONS, FITNESS = pso(
     FIT_LANDSCAPE.getFitness,
     LB,
     UB,
     swarmsize=SWARM_SIZE,
     minstep=MIN_STEP,
+    maxiter=MAX_ITER,
     debug=True,
     phip=0.2,
     phig=0.4,
