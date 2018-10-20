@@ -41,7 +41,9 @@ class FitnessLandscape():
         for x in range(0, rows - 1):
             for y in range(0, cols -1):
                 priority_multi = self.priority_multiplier(x, y)
-                area_sum += self.z[x][y]*priority_multi
+                value = self.z[x][y]*priority_multi
+                print(x,y,value)
+                area_sum += value
         return area_sum
 
     def getFitness(self, x_values):
@@ -62,7 +64,6 @@ class FitnessLandscape():
                     if(strength > previous_strength or previous_strength == 0):
                         self.z[int(x_point)][int(y_point)] = strength
         fitness = -1 * self.getAreaSum()
-
         return fitness
 
     def priority_multiplier(self, x_coord, y_coord):
@@ -73,9 +74,9 @@ class FitnessLandscape():
         The default multiplier (white pixels) is 1'''
         pixel_value = self.map_array[x_coord][y_coord]
         if pixel_value == 255 or pixel_value == 0 or pixel_value == 128:
-            return 10
+            return 100
         if pixel_value == 76:  # SECOND PRIORITY = RED
-            return 8
+            return 1
         if pixel_value == 149:  # FIRST PRIORITY = GREEN
             return 1
         else:
@@ -114,17 +115,7 @@ class FitnessLandscape():
         (X1,Y1) = pixel location
         freq = 2.4ghz"""
 
-        #grocery store path loss exp
-        # L_exp = 1.8     #L_exp = path loss exponent (n)
-
-        # #Wall losses
-        # k_1 = 2         #k_i = no. of walls of type i
-        # k_2 = 3
-        # L_1 = 3.4       #L_i = Loss of wall type i
         L_2 = 6.9
-        # L0 = 40.04                  #L0 = path loss at 1m from router
-        # #r = 100                     #r = max. radius of router
-
         sig_stren_router = 23      #sig_stren_router = signal strength at the router (dB)
         n = 2
         num_walls = 0
@@ -135,7 +126,7 @@ class FitnessLandscape():
 
         #dist = straight-line distance from router.
         # Multiply by room mesurement scale factor
-        # (so that image file can be small whilst still getting large maps)
+        # so that image file can be small whilst still getting large maps
         x_delta = (x_node - X1)*self.scale
         y_delta = (y_node - Y1)*self.scale
         dist = sqrt((x_delta)**2 + (y_delta)**2)
@@ -143,12 +134,8 @@ class FitnessLandscape():
         if dist == 0:
             sig_stren = sig_stren_router
         else:
-            #sig_stren = sig_stren_router - (L0 + 20 * L_exp * log10(dist))  num_walls*L_2)
             path_loss = -(10 * n * log10(dist)) + (20 * log10(0.12)) - (20 * log10(4*pi)) - num_walls*L_2
             sig_stren = sig_stren_router + path_loss
-        # if sig_stren > 0:
-        #     sig_stren = 0
-        # check for walls
         if sig_stren < self.minStrength:
             self.minStrength = sig_stren
         return sig_stren

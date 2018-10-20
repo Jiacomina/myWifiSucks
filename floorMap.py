@@ -13,6 +13,7 @@ class FloorMap():
         """Reads in image from file name and returns as an array"""
 
         img = Image.open(file_name).convert('RGB')  # open image file
+        self.image = img
         img = img.convert('L') # convert to grayscale image
         print("Reading image: '" + file_name + "'")
         arr = np.array(img)
