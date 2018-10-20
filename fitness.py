@@ -42,7 +42,7 @@ class FitnessLandscape():
             for y in range(0, cols -1):
                 priority_multi = self.priority_multiplier(x, y)
                 value = self.z[x][y]*priority_multi
-                print(x,y,value)
+                #print(x,y,value)
                 area_sum += value
         return area_sum
 
@@ -74,7 +74,7 @@ class FitnessLandscape():
         The default multiplier (white pixels) is 1'''
         pixel_value = self.map_array[x_coord][y_coord]
         if pixel_value == 255 or pixel_value == 0 or pixel_value == 128:
-            return 100
+            return 1
         if pixel_value == 76:  # SECOND PRIORITY = RED
             return 1
         if pixel_value == 149:  # FIRST PRIORITY = GREEN
