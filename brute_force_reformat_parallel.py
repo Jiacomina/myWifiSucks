@@ -27,52 +27,11 @@ MAP_FILEPATH = './Images/wall1nogo.png'
 NUM_NODES = 2
 SCALE = 1
 
-# get filepath from command line arguments
-if len(sys.argv) > 1:
-    MAP_FILEPATH = './Images/' + sys.argv[1]
-
-# read image file, print WIDTH, HEIGHT and dimensions (RGBA == 4 dimensions)
-FLOOR_MAP = FloorMap(MAP_FILEPATH)
-(WIDTH, HEIGHT) = (FLOOR_MAP.width, FLOOR_MAP.height)
-MAP_ARRAY = FLOOR_MAP.array
-print("Read Image: ", MAP_FILEPATH, "  WIDTH: ", WIDTH, "  HEIGHT: ", HEIGHT)
-
-MAP_IMG = FLOOR_MAP.image
-WALL_IMG = FLOOR_MAP.get_transparent_img()
-WALLS = FLOOR_MAP.get_walls()
-
-# START TIMER
-start = time()
-log("Start Program")
-
-# Create new fitnessLandscape object
-FIT_LANDSCAPE = FitnessLandscape(WIDTH, HEIGHT, NUM_NODES, MAP_ARRAY, WALLS, SCALE)
-
-# attempt brute force computation
-print("Attempting brute force")
-# create list containing all pixel coordinates 
-array_of_permutations = []
-for x in range(0, WIDTH):
-    for y in range(0, HEIGHT):
-        array_of_permutations.append([x, y])
-
-print("Creating array of point permutations...")
-if NUM_NODES > 1:
-    # make larger list for n nodes
-    array_of_permutations = itertools.permutations(array_of_permutations, NUM_NODES)
-
-
-def reformat(array_of_permutations_in):
-
-    # change format of points from ( [[0,1], [0, 2]],  [[0,1],[0, 2]] ) -> ([0, 1, 0, 2],[0, 1, 0, 2])
-    # because that is how pyswarm pso() reads it
-    print("Reformatting permutated points")
-    points = []
-    for pos in array_of_permutations_in:
-        pos = list(itertools.chain.from_iterable(pos))
-        print(pos)
-        points.append(pos)
-    return points
+# change format of points from ( [[0,1], [0, 2]],  [[0,1],[0, 2]] ) -> ([0, 1, 0, 2],[0, 1, 0, 2])
+# because that is how pyswarm pso() reads it
+def reformat(pos):
+    pos = list(itertools.chain.from_iterable(pos))
+    return pos
 
 
 def get_fitness(point):
@@ -82,13 +41,46 @@ def get_fitness(point):
 
 
 if __name__ == '__main__':
+
+    # get filepath from command line arguments
+    if len(sys.argv) > 1:
+        MAP_FILEPATH = './Images/' + sys.argv[1]
+
+    # read image file, print WIDTH, HEIGHT and dimensions (RGBA == 4 dimensions)
+    FLOOR_MAP = FloorMap(MAP_FILEPATH)
+    (WIDTH, HEIGHT) = (FLOOR_MAP.width, FLOOR_MAP.height)
+    MAP_ARRAY = FLOOR_MAP.array
+    print("Read Image: ", MAP_FILEPATH, "  WIDTH: ", WIDTH, "  HEIGHT: ", HEIGHT)
+
+    MAP_IMG = FLOOR_MAP.image
+    WALL_IMG = FLOOR_MAP.get_transparent_img()
+    WALLS = FLOOR_MAP.get_walls()
+
+    # START TIMER
+    start = time()
+    log("Start Program")
+
+    # Create new fitnessLandscape object
+    FIT_LANDSCAPE = FitnessLandscape(WIDTH, HEIGHT, NUM_NODES, MAP_ARRAY, WALLS, SCALE)
+
+    # attempt brute force computation
+    print("Attempting brute force")
+    # create list containing all pixel coordinates 
+    array_of_permutations = []
+    for x in range(0, WIDTH):
+        for y in range(0, HEIGHT):
+            array_of_permutations.append([x, y])
+
+    print("Creating array of point permutations...")
+    if NUM_NODES > 1:
+        # make larger list for n nodes
+        array_of_permutations = itertools.permutations(array_of_permutations, NUM_NODES)
+
     print("Start multithreaded reformatting")
     # Set up mulltiprocessing
     pool = Pool()
-
     # calculate get_fitness() for each item in the points list, result is returned as a 1D array
     points = pool.map(reformat, array_of_permutations)
-
     # end mulltiprocessing
     pool.close()
     pool.join()
@@ -96,10 +88,8 @@ if __name__ == '__main__':
     print("Start multithreaded fitness calculations for each point")
     # Set up mulltiprocessing
     pool = Pool()
-
     # calculate get_fitness() for each item in the points list, result is returned as a 1D array
     results = pool.map(get_fitness, points)
-
     # end mulltiprocessing
     pool.close()
     pool.join()
