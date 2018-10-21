@@ -27,3 +27,4 @@ def endlog(start):
     end = time()
     elapsed = end-start
     log("End Program", secondsToStr(elapsed))
+    return elapsed

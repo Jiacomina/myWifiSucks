@@ -11,13 +11,31 @@ matplotlib.use('TkAgg')
 import matplotlib.pyplot as plt
 from matplotlib.ticker import MaxNLocator
 import numpy as np
+import os
+from timer import time, endlog, log
+import atexit
 from pyswarm import pso
 from floorMap import FloorMap
 from fitness import FitnessLandscape
 
-
 if len(sys.argv) > 1:
     MAP_FILEPATH = './Images/' + sys.argv[1]
+
+# Make data directory
+directory = 'Data/'+sys.argv[1] + '/'
+
+if not os.path.exists(directory):
+    os.makedirs(directory)
+
+filename = directory + 'results.txt'
+if os.path.exists(filename):
+    append_write = 'w' # append if already exists
+else:
+    append_write = 'w' # make a new file if not
+
+data_file = open(filename,append_write)
+data_file.write(sys.argv[1] + '\n\n')
+
 # read image file, print WIDTH, HEIGHT and dimensions (RGBA == 4 dimensions)
 FLOOR_MAP = FloorMap(MAP_FILEPATH)
 (WIDTH, HEIGHT) = (FLOOR_MAP.width, FLOOR_MAP.height)
@@ -50,8 +68,15 @@ FIT_LANDSCAPE = FitnessLandscape(WIDTH, HEIGHT, NUM_NODES, MAP_ARRAY, WALLS, SCA
 #################################  Vary swarm size parameter  #################################
 
 for size in SWARM_SIZE:
-    OPTIMAL_POSITIONS, FITNESS = pso(
-        FIT_LANDSCAPE.getFitness,
+
+	# START TIMER
+	start = time()
+	log("Start Program")
+
+	print("Processing Size: ", directory, size)
+	data_file.write("Size: "+ str(size) + '\n')
+	OPTIMAL_POSITIONS, FITNESS, ITER= pso(
+		FIT_LANDSCAPE.getFitness,
         LB,
         UB,
         swarmsize=size,
@@ -62,77 +87,95 @@ for size in SWARM_SIZE:
         phig=phig_fixed,
         omega=omega_fixed,
         f_ieqcons=FIT_LANDSCAPE.check_pos,
-        map_img = MAP_IMG)
+        map_img=MAP_IMG,
+		processes=4,
+		draw_figures=False)
 
-print("Position optimals: ", OPTIMAL_POSITIONS)
-print("Optimal Fitness: ", FITNESS)
+	print("Position optimals: ", OPTIMAL_POSITIONS)
+	print("Optimal Fitness: ", FITNESS)
+    
+	data_file.write("Optimal Position: "+ str(OPTIMAL_POSITIONS) + '\n')
+	data_file.write("Fitness: "+ str(FITNESS) + '\n')
+	data_file.write("Iterations: "+ str(ITER) + '\n')
+	#create get z values(fitness values) using the optimal x y positions
+	FIT_LANDSCAPE.getFitness(OPTIMAL_POSITIONS)
 
-#create get z values(fitness values) using the optimal x y positions
-FIT_LANDSCAPE.getFitness(OPTIMAL_POSITIONS)
+	Z = FIT_LANDSCAPE.z # 2D array of fitness values
+	X = FIT_LANDSCAPE.x # 1D array of x axis values
+	Y = FIT_LANDSCAPE.y # 1D array of y axis values
 
-Z = FIT_LANDSCAPE.z # 2D array of fitness values
-X = FIT_LANDSCAPE.x # 1D array of x axis values
-Y = FIT_LANDSCAPE.y # 1D array of y axis values
+	levels = MaxNLocator(nbins=100).tick_values(int(Z.min())-1, int(Z.max())+1)
+	# create contour plot from x, y and z arrays
+	fig2, axis2 = plt.subplots()
+	cp = axis2.contourf(Y, X, Z, cmap='gist_rainbow', levels = levels)
+	cb = fig2.colorbar(cp)  # contour plot legend bar
 
-levels = MaxNLocator(nbins=100).tick_values(int(Z.min())-1, int(Z.max())+1)
-# create contour plot from x, y and z arrays
-fig2, axis2 = plt.subplots()
-cp = axis2.contourf(Y, X, Z, cmap='gist_rainbow', levels = levels)
-cb = fig2.colorbar(cp)  # contour plot legend bar
+	# overlay with map image
+	axis2.imshow(WALL_IMG, zorder=10)
+	fig2.savefig(directory +"size_" + str(size) + ".png", dpi=200)
 
-# overlay with map image
-axis2.imshow(WALL_IMG, zorder=10)
-
-#plot nodes
-#plt.scatter(optimal_positions[1::2], optimal_positions[0::2], c='m')
-fig2.savefig("./plotframes/contourPlot.png", dpi=250)
-plt.show()
+	elapsed = endlog(start)
+	data_file.write("Time elapsed: " + str(elapsed) + '\n\n')
 
 #################################  Vary pbest coefficient  #################################
-
 for pbest in phip:
-    OPTIMAL_POSITIONS, FITNESS = pso(
-        FIT_LANDSCAPE.getFitness,
-        LB,
-        UB,
-        swarmsize=SWARM_SIZE_FIXED,
-        minstep=MIN_STEP_FIXED,
-        maxiter=MAX_ITER_FIXED,
-        debug=True,
-        phip=pbest,
-        phig=phig_fixed,
-        omega=omega_fixed,
-        f_ieqcons=FIT_LANDSCAPE.check_pos,
-        map_img = MAP_IMG)
+	# START TIMER
+	start = time()
+	log("Start Program")
+	data_file.write("Pbest: "+ str(pbest) + '\n')
+	print("Processing Pbest: ", directory, pbest)
+	OPTIMAL_POSITIONS, FITNESS, ITER= pso(
+		FIT_LANDSCAPE.getFitness,
+		LB,
+		UB,
+		swarmsize=SWARM_SIZE_FIXED,
+		minstep=MIN_STEP_FIXED,
+		maxiter=MAX_ITER_FIXED,
+		debug=True,
+		phip=pbest,
+		phig=phig_fixed,
+		omega=omega_fixed,
+		f_ieqcons=FIT_LANDSCAPE.check_pos,
+		map_img = MAP_IMG,
+		processes = 4,
+		draw_figures = False)
+	
+	print("Position optimals: ", OPTIMAL_POSITIONS)
+	print("Optimal Fitness: ", FITNESS)
 
-print("Position optimals: ", OPTIMAL_POSITIONS)
-print("Optimal Fitness: ", FITNESS)
+	data_file.write("Optimal Position: "+ str(OPTIMAL_POSITIONS) + '\n')
+	data_file.write("Fitness: "+ str(FITNESS) + '\n')
+	data_file.write("Iterations: "+ str(ITER) + '\n')
 
-#create get z values(fitness values) using the optimal x y positions
-FIT_LANDSCAPE.getFitness(OPTIMAL_POSITIONS)
+    #create get z values(fitness values) using the optimal x y positions
+	FIT_LANDSCAPE.getFitness(OPTIMAL_POSITIONS)
 
-Z = FIT_LANDSCAPE.z # 2D array of fitness values
-X = FIT_LANDSCAPE.x # 1D array of x axis values
-Y = FIT_LANDSCAPE.y # 1D array of y axis values
+	Z = FIT_LANDSCAPE.z # 2D array of fitness values
+	X = FIT_LANDSCAPE.x # 1D array of x axis values
+	Y = FIT_LANDSCAPE.y # 1D array of y axis values
 
-levels = MaxNLocator(nbins=100).tick_values(int(Z.min())-1, int(Z.max())+1)
-# create contour plot from x, y and z arrays
-fig2, axis2 = plt.subplots()
-cp = axis2.contourf(Y, X, Z, cmap='gist_rainbow', levels = levels)
-cb = fig2.colorbar(cp)  # contour plot legend bar
+	levels = MaxNLocator(nbins=100).tick_values(int(Z.min())-1, int(Z.max())+1)
+	# create contour plot from x, y and z arrays
+	fig2, axis2 = plt.subplots()
+	cp = axis2.contourf(Y, X, Z, cmap='gist_rainbow', levels = levels)
+	cb = fig2.colorbar(cp)  # contour plot legend bar
 
-# overlay with map image
-axis2.imshow(WALL_IMG, zorder=10)
+	# overlay with map image
+	axis2.imshow(WALL_IMG, zorder=10)
 
-#plot nodes
-#plt.scatter(optimal_positions[1::2], optimal_positions[0::2], c='m')
-fig2.savefig("./plotframes/contourPlot.png", dpi=250)
-plt.show()
+	fig2.savefig(directory +"pbest_" + str(pbest) + ".png", dpi=200)
+	elapsed = endlog(start)
+	data_file.write("Time elapsed: " + str(elapsed) + '\n\n')
 
 #################################  Vary gbest coefficient  #################################
 
 for gbest in phig:
-    OPTIMAL_POSITIONS, FITNESS = pso(
+	# START TIMER
+	start = time()
+	log("Start Program")
+	data_file.write("Gbest: "+ str(gbest) + '\n')
+	print("Processing Gbest: ", directory, gbest)
+	OPTIMAL_POSITIONS, FITNESS, ITER= pso(
         FIT_LANDSCAPE.getFitness,
         LB,
         UB,
@@ -144,36 +187,46 @@ for gbest in phig:
         phig=gbest,
         omega=omega_fixed,
         f_ieqcons=FIT_LANDSCAPE.check_pos,
-        map_img = MAP_IMG)
+        map_img = MAP_IMG,
+		processes = 4,
+        draw_figures = False)
 
-print("Position optimals: ", OPTIMAL_POSITIONS)
-print("Optimal Fitness: ", FITNESS)
+	print("Position optimals: ", OPTIMAL_POSITIONS)
+	print("Optimal Fitness: ", FITNESS)
 
-#create get z values(fitness values) using the optimal x y positions
-FIT_LANDSCAPE.getFitness(OPTIMAL_POSITIONS)
+	data_file.write("Optimal Position: "+ str(OPTIMAL_POSITIONS) + '\n')
+	data_file.write("Fitness: "+ str(FITNESS) + '\n')
+	data_file.write("Iterations: "+ str(ITER) + '\n')
 
-Z = FIT_LANDSCAPE.z # 2D array of fitness values
-X = FIT_LANDSCAPE.x # 1D array of x axis values
-Y = FIT_LANDSCAPE.y # 1D array of y axis values
+	#create get z values(fitness values) using the optimal x y positions
+	FIT_LANDSCAPE.getFitness(OPTIMAL_POSITIONS)
 
-levels = MaxNLocator(nbins=100).tick_values(int(Z.min())-1, int(Z.max())+1)
-# create contour plot from x, y and z arrays
-fig2, axis2 = plt.subplots()
-cp = axis2.contourf(Y, X, Z, cmap='gist_rainbow', levels = levels)
-cb = fig2.colorbar(cp)  # contour plot legend bar
+	Z = FIT_LANDSCAPE.z # 2D array of fitness values
+	X = FIT_LANDSCAPE.x # 1D array of x axis values
+	Y = FIT_LANDSCAPE.y # 1D array of y axis values
 
-# overlay with map image
-axis2.imshow(WALL_IMG, zorder=10)
+	levels = MaxNLocator(nbins=100).tick_values(int(Z.min())-1, int(Z.max())+1)
+	# create contour plot from x, y and z arrays
+	fig2, axis2 = plt.subplots()
+	cp = axis2.contourf(Y, X, Z, cmap='gist_rainbow', levels = levels)
+	cb = fig2.colorbar(cp)  # contour plot legend bar
 
-#plot nodes
-#plt.scatter(optimal_positions[1::2], optimal_positions[0::2], c='m')
-fig2.savefig("./plotframes/contourPlot.png", dpi=250)
-plt.show()
+	# overlay with map image
+	axis2.imshow(WALL_IMG, zorder=10)
+
+	fig2.savefig(directory +"gbest_" + str(gbest) + ".png", dpi=200)
+	elapsed = endlog(start)
+	data_file.write("Time elapsed: " + str(elapsed) + '\n\n')
 
 #################################  Vary inertia weight coefficient ##################################
 
 for acc in omega:
-    OPTIMAL_POSITIONS, FITNESS = pso(
+	# START TIMER
+	start = time()
+	log("Start Program")
+	data_file.write("Acc: "+ str(acc) + '\n')
+	print("Processing Acc: ", directory, acc)
+	OPTIMAL_POSITIONS, FITNESS, ITER= pso(
         FIT_LANDSCAPE.getFitness,
         LB,
         UB,
@@ -185,29 +238,35 @@ for acc in omega:
         phig=phig_fixed,
         omega=acc,
         f_ieqcons=FIT_LANDSCAPE.check_pos,
-        map_img = MAP_IMG)
+        map_img = MAP_IMG,
+        draw_figures = False,
+		processes = 4)
 
-print("Position optimals: ", OPTIMAL_POSITIONS)
-print("Optimal Fitness: ", FITNESS)
+	print("Position optimals: ", OPTIMAL_POSITIONS)
+	print("Optimal Fitness: ", FITNESS)
 
-#create get z values(fitness values) using the optimal x y positions
-FIT_LANDSCAPE.getFitness(OPTIMAL_POSITIONS)
+	data_file.write("Optimal Position: "+ str(OPTIMAL_POSITIONS) + '\n')
+	data_file.write("Fitness: "+ str(FITNESS) + '\n')
+	data_file.write("Iterations: "+ str(ITER) + '\n')
 
-Z = FIT_LANDSCAPE.z # 2D array of fitness values
-X = FIT_LANDSCAPE.x # 1D array of x axis values
-Y = FIT_LANDSCAPE.y # 1D array of y axis values
+	#create get z values(fitness values) using the optimal x y positions
+	FIT_LANDSCAPE.getFitness(OPTIMAL_POSITIONS)
 
-levels = MaxNLocator(nbins=100).tick_values(int(Z.min())-1, int(Z.max())+1)
-# create contour plot from x, y and z arrays
-fig2, axis2 = plt.subplots()
-cp = axis2.contourf(Y, X, Z, cmap='gist_rainbow', levels = levels)
-cb = fig2.colorbar(cp)  # contour plot legend bar
+	Z = FIT_LANDSCAPE.z # 2D array of fitness values
+	X = FIT_LANDSCAPE.x # 1D array of x axis values
+	Y = FIT_LANDSCAPE.y # 1D array of y axis values
 
-# overlay with map image
-axis2.imshow(WALL_IMG, zorder=10)
+	levels = MaxNLocator(nbins=100).tick_values(int(Z.min())-1, int(Z.max())+1)
+	# create contour plot from x, y and z arrays
+	fig2, axis2 = plt.subplots()
+	cp = axis2.contourf(Y, X, Z, cmap='gist_rainbow', levels = levels)
+	cb = fig2.colorbar(cp)  # contour plot legend bar
 
-#plot nodes
-#plt.scatter(optimal_positions[1::2], optimal_positions[0::2], c='m')
-fig2.savefig("./plotframes/contourPlot.png", dpi=250)
-plt.show()
+	# overlay with map image
+	axis2.imshow(WALL_IMG, zorder=10)
 
+	fig2.savefig(directory +"acc_" + str(acc) + ".png", dpi=200)
+	elapsed = endlog(start)
+	data_file.write("Time elapsed: " + str(elapsed) + '\n\n')
+
+data_file.close()

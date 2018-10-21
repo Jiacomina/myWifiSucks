@@ -4,6 +4,11 @@ import matplotlib
 import matplotlib.pyplot as plt
 import matplotlib.animation as manimation
 from multiprocessing import Pool 
+import contextlib
+
+@contextlib.contextmanager
+def dummy_context_mgr():
+    yield None
 
 def _obj_wrapper(func, args, kwargs, x):
     return func(x, *args, **kwargs)
@@ -23,7 +28,7 @@ def _cons_f_ieqcons_wrapper(f_ieqcons, args, kwargs, x):
 def pso(func, lb, ub, map_img, ieqcons=[], f_ieqcons=None, args=(), kwargs={}, 
         swarmsize=100, omega=0.5, phip=0.5, phig=0.5, maxiter=100, 
         minstep=1e-8, minfunc=1e-8, debug=False, processes=1,
-        particle_output=False):
+        particle_output=False, draw_figures=True):
     """
     Perform a particle swarm optimization (PSO)
    
@@ -96,9 +101,10 @@ def pso(func, lb, ub, map_img, ieqcons=[], f_ieqcons=None, args=(), kwargs={},
     metadata = dict(title='MyWifiSucks_pso_animation')
     writer = FFMpegWriter(fps=3, metadata=metadata) 
 
-    fig1, axis1 = plt.subplots()
-    axis1.axis([0, ub[1], 0, ub[0]])  
-    fig1.gca().invert_yaxis()
+    if(draw_figures):
+        fig1, axis1 = plt.subplots()
+        axis1.axis([0, ub[1], 0, ub[0]])  
+        fig1.gca().invert_yaxis()
 
     assert len(lb)==len(ub), 'Lower- and upper-bounds must be the same length'
     assert hasattr(func, '__call__'), 'Invalid function handle'
@@ -175,8 +181,9 @@ def pso(func, lb, ub, map_img, ieqcons=[], f_ieqcons=None, args=(), kwargs={},
     # Initialize the particle's velocity
     v = vlow + np.random.rand(S, D)*(vhigh - vlow)
     
+
     # Iterate until termination criterion met ##################################
-    with writer.saving(fig1, "./plotframes/pso_anim.mp4", 150):
+    with writer.saving(fig1, "./plotframes/pso_anim.mp4", 150) if draw_figures else dummy_context_mgr():
         it = 1
         while it <= maxiter:
             rp = np.random.uniform(size=(S, D))
@@ -209,15 +216,16 @@ def pso(func, lb, ub, map_img, ieqcons=[], f_ieqcons=None, args=(), kwargs={},
             i_min = np.argmin(fp)
             print('New position for swarm at iteration {:}: {:} {:}'\
                         .format(it, p[i_min, :], fp[i_min]))
-            axis1.cla()
-            axis1.imshow(map_img, zorder=0)
-            axis1.axis([0, ub[1], 0, ub[0]])  
+            if(draw_figures):
+                axis1.cla()
+                axis1.imshow(map_img, zorder=0)
+                axis1.axis([0, ub[1], 0, ub[0]])  
 
-            feasible_points = x[fs, :].copy()
-            for item in feasible_points:
-                    axis1.scatter(item[1], item[0])
-            fig1.savefig("./plotframes/iter"+str(it)+".png", dpi=150)
-            writer.grab_frame()
+                feasible_points = x[fs, :].copy()
+                for item in feasible_points:
+                        axis1.scatter(item[1], item[0])
+                fig1.savefig("./plotframes/iter"+str(it)+".png", dpi=150)
+                writer.grab_frame()
 
             if fp[i_min] < fg:
                 if debug:
@@ -233,14 +241,14 @@ def pso(func, lb, ub, map_img, ieqcons=[], f_ieqcons=None, args=(), kwargs={},
                     if particle_output:
                         return p_min, fp[i_min], p, fp
                     else:
-                        return p_min, fp[i_min]
+                        return p_min, fp[i_min], it
                 elif stepsize <= minstep:
                     print('Stopping search: Swarm best position change less than {:}'\
                         .format(minstep))
                     if particle_output:
                         return p_min, fp[i_min], p, fp
                     else:
-                        return p_min, fp[i_min]
+                        return p_min, fp[i_min], it
                 else:
                     g = p_min.copy()
                     fg = fp[i_min]
@@ -250,9 +258,10 @@ def pso(func, lb, ub, map_img, ieqcons=[], f_ieqcons=None, args=(), kwargs={},
             it += 1
     print('Stopping search: maximum iterations reached --> {:}'.format(maxiter))
     
+    it-=1
     if not is_feasible(g):
         print("However, the optimization couldn't find a feasible design. Sorry")
     if particle_output:
         return g, fg, p, fp
     else:
-        return g, fg
+        return g, fg, it
