@@ -26,7 +26,6 @@ class FitnessLandscape():
         self.width = width
         self.height = height
         self.map_array = map_array
-        print(map_array)
         self.walls = walls
         self.scale = scale
         self.minStrength = -50
@@ -42,7 +41,6 @@ class FitnessLandscape():
             for y in range(0, cols -1):
                 priority_multi = self.priority_multiplier(x, y)
                 value = self.z[x][y]*priority_multi
-                #print(x,y,value)
                 area_sum += value
         return area_sum
 

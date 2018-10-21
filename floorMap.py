@@ -101,5 +101,5 @@ class FloorMap():
                         #         end[0] += half_ext
                         walls.append([start, end])
                         axis3.plot([start[1], end[1]], [start[0], end[0]])
-        plt.show()  
+        #plt.show()  
         return walls

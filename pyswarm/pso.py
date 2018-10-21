@@ -3,7 +3,7 @@ import numpy as np
 import matplotlib
 import matplotlib.pyplot as plt
 import matplotlib.animation as manimation
-
+from multiprocessing import Pool 
 
 def _obj_wrapper(func, args, kwargs, x):
     return func(x, *args, **kwargs)

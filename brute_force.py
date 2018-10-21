@@ -1,22 +1,33 @@
 """
-Program to calculate optimal wifi node positioning using PSO
+Program to calculate optimal wifi node positioning using BRUTE FORCE
 Floor plan can be can be read in as a greyscale image file e.g. png.
+
+Brute for diagram if NUM_NODES = 1 is created, saved in plotframes/bruteForcePlot.png
 """
 import sys
+import numpy as np
+import matplotlib
+matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 from matplotlib.ticker import MaxNLocator
-import numpy as np
-from pyswarm import pso
-from floorMap import FloorMap
-from fitness import FitnessLandscape
+from timer import time, endlog
+import atexit
+from multiprocessing import Pool 
+from numpy import unravel_index
 import itertools
 
-MAP_FILEPATH = './Images/wall1nogo.png'
-NUM_NODES = 1
-SCALE = 1/3
-SWARM_SIZE = 50
-MAX_ITER = 6
+# local  modules
+from floorMap import FloorMap
+from fitness import FitnessLandscape
+from timer import log
 
+# CUSTOM VARIABLES THAT CAN BE CHANGED
+# default file path, can also change this by adding filename as command line argument
+MAP_FILEPATH = './Images/wall3priorities.png' 
+NUM_NODES = 2
+SCALE = 1
+
+# get filepath from command line arguments
 if len(sys.argv) > 1:
     MAP_FILEPATH = './Images/' + sys.argv[1]
 
@@ -26,73 +37,97 @@ FLOOR_MAP = FloorMap(MAP_FILEPATH)
 MAP_ARRAY = FLOOR_MAP.array
 print("Read Image: ", MAP_FILEPATH, "  WIDTH: ", WIDTH, "  HEIGHT: ", HEIGHT)
 
-MAP_IMG = FLOOR_MAP.get_transparent_img()
+MAP_IMG = FLOOR_MAP.image
+WALL_IMG = FLOOR_MAP.get_transparent_img()
 WALLS = FLOOR_MAP.get_walls()
-print(WALLS)  # How is this printing an array? Does python automatically do this?
 
-LB = np.full((NUM_NODES*2), 1)          # lower bounds of fitness landscape, start at 1, *2 for x y [x1 = 1 y1 =1]
-UB = np.empty((NUM_NODES*2))
-UB[::2] = WIDTH - 2  # every 2nd element, y for each node, equals width - 2
-UB[1::2] = HEIGHT - 2  # the upper bound for each x coordinate of every node = height - 2
-
+# START TIMER
+start = time()
+log("Start Program")
 
 # Create new fitnessLandscape object
 FIT_LANDSCAPE = FitnessLandscape(WIDTH, HEIGHT, NUM_NODES, MAP_ARRAY, WALLS, SCALE)
 
 # attempt brute force computation
-
 print("Attempting brute force")
-
-# start by creating an array "array_of_permutations" that has all the possible and allowed x and y values
-# for node positions. Have x and y values for all node positions, even if they are repeated
-
-# btw allowing repetitions makes code inefficient, but for now not a big deal. Can optimise later if time - again
-# shouldn't matter too much
-
-y_length = WIDTH - 2
-x_length = HEIGHT - 2
-a = 1
-b = 1
-index = 0
+# create list containing all pixel coordinates 
 array_of_permutations = []
+for x in range(0, WIDTH):
+    for y in range(0, HEIGHT):
+        array_of_permutations.append([x, y])
 
-while index < x_length:
-    array_of_permutations.append(a)
-    a = a + 1
-    index = index + 1
+print("Creating array of point permutations...")
+if NUM_NODES > 1:
+    # make larger list for n nodes
+    array_of_permutations = itertools.permutations(array_of_permutations, NUM_NODES)
 
-while index < (x_length + y_length):
-    array_of_permutations.append(b)
-    b = b + 1
-    index = index + 1
+# change format of points from ( [[0,1], [0, 2]],  [[0,1],[0, 2]] ) -> ([0, 1, 0, 2],[0, 1, 0, 2])
+# because that is how pyswarm pso() reads it
+print("Reformatting permutated points")
+points = []
+for pos in array_of_permutations:
+    pos = list(itertools.chain.from_iterable(pos))
+    print(pos)
+    points.append(pos)
 
-# technically we created an array with x y values for one node, extend this array for all nodes
+# function that gets fitness value for given point coordinates
+def get_fitness(point):
+    fitness = FIT_LANDSCAPE.getFitness(point)
+    print("X:", point, " FITNESS:", fitness)
+    return [point, fitness]
 
-node = 2
-while node <= NUM_NODES:
-    array_of_permutations.extend(array_of_permutations)
-    node = node + 1
+print("Start multithreaded fitness calculations for each point")
+# Set up mulltiprocessing
+pool = Pool()
 
-print("array of permutations: ", array_of_permutations)
+# calculate get_fitness() for each item in the points list, result is returned as a 1D array
+results = pool.map(get_fitness, points)
 
-# create all the possible x y values for our map for all the nodes
+# end mulltiprocessing
+pool.close() 
+pool.join()
 
-all_x_y_pos = itertools.permutations(array_of_permutations, NUM_NODES * 2)
-# for pos in all_x_y_pos:
-    # print(pos)
+# extract fitnesses and positions from results array
+fitness_array = [item[1] for item in results]
+positions = [item[0] for item in results]
 
-# compute fitness for all x y points for all nodes and find best position
+# find best and mac fitness
+max_fitness = max(fitness_array)
+best_fitness = min(fitness_array)
 
-final_fitness = 0  # variable to store our best fitness value
-previous_fitness = -1
-best_pos_for_nodes = []
-for pos in all_x_y_pos:
-    fitness = FIT_LANDSCAPE.getFitness(pos)
-    if fitness > previous_fitness:
-        final_fitness = fitness
-        previous_fitness = fitness
-        best_pos_for_nodes = pos
+# get x and y coordinates of best solution
+best_coord = positions[fitness_array.index(best_fitness)]
 
-print("best position for nodes: ", pos, "\tfitness: ", final_fitness)
+# convert fitness values to a value from 0 - 1
+percent_fitness_array = 1-(fitness_array-best_fitness)/(max_fitness - best_fitness)
+print("Worst fitness", max_fitness)
+print("Best fitness", best_fitness)
+print("Optimal Position: ", best_coord)
 
-# maybe some visualization here, sorry still too dumb at python to do quickly :(
+# End Timer
+atexit.register(endlog, start)
+
+# Create visual plot if num_nodes is 1
+if(NUM_NODES == 1):
+
+    # create array to store fitness values
+    z = np.zeros([WIDTH, HEIGHT], dtype=float)
+    # convert 1D fitnesses array into 2D array
+    for index, fit in enumerate(percent_fitness_array):
+        x = positions[index][0]
+        y = positions[index][1]
+        z[x][y] = fit
+
+    # create contour plot from x, y and z arrays
+    fig2, axis2 = plt.subplots()
+    levels = MaxNLocator(nbins=100).tick_values(0, 1)
+    cp = axis2.contourf(range(0,HEIGHT), range(0,WIDTH), z, cmap='gnuplot', levels = levels)
+    cb = fig2.colorbar(cp)  # contour plot legend bar
+
+    # overlay with map image
+    axis2.imshow(WALL_IMG, zorder=10)
+
+    #plot nodes
+    fig2.savefig("./plotframes/BruteForcePlot.png", dpi=250)
+ 
+        
