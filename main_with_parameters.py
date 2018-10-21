@@ -22,7 +22,7 @@ if len(sys.argv) > 1:
     MAP_FILEPATH = './Images/' + sys.argv[1]
 
 # Make data directory
-directory = 'Data/'+sys.argv[1] + '/'
+directory = 'parameter_testing_data/'+sys.argv[1] + '/'
 
 if not os.path.exists(directory):
     os.makedirs(directory)
@@ -89,7 +89,8 @@ for size in SWARM_SIZE:
         f_ieqcons=FIT_LANDSCAPE.check_pos,
         map_img=MAP_IMG,
 		processes=4,
-		draw_figures=False)
+		draw_figures=False,
+		directory=directory)
 
 	print("Position optimals: ", OPTIMAL_POSITIONS)
 	print("Optimal Fitness: ", FITNESS)

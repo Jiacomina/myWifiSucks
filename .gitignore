@@ -6,4 +6,5 @@ env/
 /venv/
 /plotframes/*
 .DS_Store
-Data/*
+main_data/*
+parameter_testing_data/*

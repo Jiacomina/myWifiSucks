@@ -25,7 +25,7 @@ def _cons_ieqcons_wrapper(ieqcons, args, kwargs, x):
 def _cons_f_ieqcons_wrapper(f_ieqcons, args, kwargs, x):
     return np.array(f_ieqcons(x, *args, **kwargs))
     
-def pso(func, lb, ub, map_img, ieqcons=[], f_ieqcons=None, args=(), kwargs={}, 
+def pso(func, lb, ub, map_img, directory, ieqcons=[], f_ieqcons=None, args=(), kwargs={}, 
         swarmsize=100, omega=0.5, phip=0.5, phig=0.5, maxiter=100, 
         minstep=1e-8, minfunc=1e-8, debug=False, processes=1,
         particle_output=False, draw_figures=True):
@@ -183,7 +183,7 @@ def pso(func, lb, ub, map_img, ieqcons=[], f_ieqcons=None, args=(), kwargs={},
     
 
     # Iterate until termination criterion met ##################################
-    with writer.saving(fig1, "./plotframes/pso_anim.mp4", 150) if draw_figures else dummy_context_mgr():
+    with writer.saving(fig1, directory + "pso_anim.mp4", 150) if draw_figures else dummy_context_mgr():
         it = 1
         while it <= maxiter:
             rp = np.random.uniform(size=(S, D))
@@ -223,8 +223,8 @@ def pso(func, lb, ub, map_img, ieqcons=[], f_ieqcons=None, args=(), kwargs={},
 
                 feasible_points = x[fs, :].copy()
                 for item in feasible_points:
-                        axis1.scatter(item[1], item[0])
-                fig1.savefig("./plotframes/iter"+str(it)+".png", dpi=150)
+                        axis1.scatter(item[1::2], item[0::2])
+                fig1.savefig(directory + "iter"+str(it)+".png", dpi=150)
                 writer.grab_frame()
 
             if fp[i_min] < fg:

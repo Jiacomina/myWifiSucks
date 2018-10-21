@@ -4,16 +4,19 @@ Floor plan can be can be read in as a greyscale image file e.g. png.
 """
 import sys
 import matplotlib
-matplotlib.use("Agg")
+matplotlib.use("TkAgg")
 import matplotlib.pyplot as plt
 from matplotlib.ticker import MaxNLocator
 import numpy as np
 from pyswarm import pso
 from floorMap import FloorMap
 from fitness import FitnessLandscape
+from timer import time, endlog, log
+import atexit
+import os
 
 MAP_FILEPATH = './Images/wall3priorities.png'
-NUM_NODES = 1
+NUM_NODES = 4
 SCALE = 1
 SWARM_SIZE = 80
 MAX_ITER = 20    # make sure either max_iter and/or min step is included in the pso() function below
@@ -21,6 +24,13 @@ MIN_STEP = 0.25
 
 if len(sys.argv) > 1:
     MAP_FILEPATH = './Images/' + sys.argv[1]
+
+# Make data directory
+directory = 'main_data/'+sys.argv[1] + '_' + str(NUM_NODES) +'/'
+
+if not os.path.exists(directory):
+    os.makedirs(directory)
+
 # read image file, print WIDTH, HEIGHT and dimensions (RGBA == 4 dimensions)
 FLOOR_MAP = FloorMap(MAP_FILEPATH)
 (WIDTH, HEIGHT) = (FLOOR_MAP.width, FLOOR_MAP.height)
@@ -44,9 +54,13 @@ FIT_LANDSCAPE = FitnessLandscape(WIDTH, HEIGHT, NUM_NODES, MAP_ARRAY, WALLS, SCA
 # run pso on fitnessLandscape object
 # optimal positions stored as array in x_optimals eg. [x1, y1, x2, y2]
 
+# START TIMER
+start = time()
+log("Start Program")
+
 # run pso
 #OPTIONS: stop pso after either minstep=MIN_STEP and/or  maxiter=MAX_ITER,
-OPTIMAL_POSITIONS, FITNESS = pso(
+OPTIMAL_POSITIONS, FITNESS, ITER= pso(
     FIT_LANDSCAPE.getFitness,
     LB,
     UB,
@@ -58,10 +72,16 @@ OPTIMAL_POSITIONS, FITNESS = pso(
     phig=0.4,
     omega=0.5,
     f_ieqcons=FIT_LANDSCAPE.check_pos,
-    map_img = MAP_IMG)
+    map_img = MAP_IMG,
+    processes=4,
+    draw_figures = True,
+    directory=directory)
+
+atexit.register(endlog, start)
 
 print("Position optimals: ", OPTIMAL_POSITIONS)
 print("Optimal Fitness: ", FITNESS)
+print("Number of Iterations:", ITER)
 
 #create get z values(fitness values) using the optimal x y positions
 FIT_LANDSCAPE.getFitness(OPTIMAL_POSITIONS)
@@ -79,7 +99,4 @@ cb = fig2.colorbar(cp)  # contour plot legend bar
 # overlay with map image
 axis2.imshow(WALL_IMG, zorder=10)
 
-#plot nodes
-#plt.scatter(optimal_positions[1::2], optimal_positions[0::2], c='m')
-fig2.savefig("./plotframes/contourPlot.png", dpi=250)
-plt.show()
+fig2.savefig("directory" + "contourPlot.png", dpi=250)
