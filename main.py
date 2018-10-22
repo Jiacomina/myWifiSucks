@@ -18,8 +18,8 @@ import os
 MAP_FILEPATH = './Images/wall3priorities.png'
 NUM_NODES = 1
 SCALE = 1
-SWARM_SIZE = 60
-MAX_ITER = 30    # make sure either max_iter and/or min step is included in the pso() function below
+SWARM_SIZE = 50
+MAX_ITER = 25    # make sure either max_iter and/or min step is included in the pso() function below
 MIN_STEP = 0.25
 
 if len(sys.argv) > 1:
@@ -30,15 +30,6 @@ directory = 'main_data/'+sys.argv[1] + '_' + str(NUM_NODES) +'/'
 
 if not os.path.exists(directory):
     os.makedirs(directory)
-
-filename = directory + 'results.txt'
-if os.path.exists(filename):
-    append_write = 'w' # append if already exists
-else:
-    append_write = 'w' # make a new file if not
-
-data_file = open(filename,append_write)
-data_file.write(sys.argv[1] + '\n\n')
 
 # read image file, print WIDTH, HEIGHT and dimensions (RGBA == 4 dimensions)
 FLOOR_MAP = FloorMap(MAP_FILEPATH)
@@ -86,15 +77,11 @@ OPTIMAL_POSITIONS, FITNESS, ITER, ITER_FITNESS= pso(
     draw_figures = True,
     directory=directory)
 
-elapsed = endlog(start)
+atexit.register(endlog, start)
 
 print("Position optimals: ", OPTIMAL_POSITIONS)
 print("Optimal Fitness: ", FITNESS)
 print("Number of Iterations:", ITER)
-data_file.write("Position optimals: " + str(OPTIMAL_POSITIONS) + '\n')
-data_file.write("Optimal Fitness: " + str(FITNESS) + '\n')
-data_file.write("Number of Iterations: " + str(ITER) + '\n')
-data_file.write("Time elapsed: " + str(elapsed) + '\n\n')
 
 #create get z values(fitness values) using the optimal x y positions
 FIT_LANDSCAPE.getFitness(OPTIMAL_POSITIONS)
