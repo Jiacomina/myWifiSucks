@@ -1,0 +1,7 @@
+parameter_room.png
+
+Position optimals: [43.98501492 23.08088443]
+Optimal Fitness: 2025033.2158395757
+Number of Iterations: 16
+Time elapsed: 798.3374679088593
+

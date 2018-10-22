@@ -154,6 +154,9 @@ def pso(func, lb, ub, map_img, directory, ieqcons=[], f_ieqcons=None, args=(), k
     # Initialize the particle's position
     x = lb + x*(ub - lb)
 
+    #best fitness after each iteration
+    iter_fitness = []
+
     # Calculate objective and constraints for each particle
     if processes > 1:
         fx = np.array(mp_pool.map(obj, x))
@@ -216,6 +219,7 @@ def pso(func, lb, ub, map_img, directory, ieqcons=[], f_ieqcons=None, args=(), k
             i_min = np.argmin(fp)
             print('New position for swarm at iteration {:}: {:} {:}'\
                         .format(it, p[i_min, :], fp[i_min]))
+            iter_fitness.append([it, p[i_min,:], fp[i_min]])
             if(draw_figures):
                 axis1.cla()
                 axis1.imshow(map_img, zorder=0)
@@ -241,14 +245,14 @@ def pso(func, lb, ub, map_img, directory, ieqcons=[], f_ieqcons=None, args=(), k
                     if particle_output:
                         return p_min, fp[i_min], p, fp
                     else:
-                        return p_min, fp[i_min], it
+                        return p_min, fp[i_min], it, iter_fitness
                 elif stepsize <= minstep:
                     print('Stopping search: Swarm best position change less than {:}'\
                         .format(minstep))
                     if particle_output:
                         return p_min, fp[i_min], p, fp
                     else:
-                        return p_min, fp[i_min], it
+                        return p_min, fp[i_min], it, iter_fitness
                 else:
                     g = p_min.copy()
                     fg = fp[i_min]
@@ -264,4 +268,4 @@ def pso(func, lb, ub, map_img, directory, ieqcons=[], f_ieqcons=None, args=(), k
     if particle_output:
         return g, fg, p, fp
     else:
-        return g, fg, it
+        return g, fg, it, iter_fitness
