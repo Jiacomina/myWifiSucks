@@ -16,7 +16,7 @@ import atexit
 import os
 
 MAP_FILEPATH = './Images/wall3priorities.png'
-NUM_NODES = 2
+NUM_NODES = 3
 SCALE = 1
 SWARM_SIZE = 60
 MAX_ITER = 20    # make sure either max_iter and/or min step is included in the pso() function below
