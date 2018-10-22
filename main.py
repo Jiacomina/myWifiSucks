@@ -16,7 +16,7 @@ import atexit
 import os
 
 MAP_FILEPATH = './Images/wall3priorities.png'
-NUM_NODES = 4
+NUM_NODES = 2
 SCALE = 1
 SWARM_SIZE = 80
 MAX_ITER = 20    # make sure either max_iter and/or min step is included in the pso() function below
@@ -99,4 +99,4 @@ cb = fig2.colorbar(cp)  # contour plot legend bar
 # overlay with map image
 axis2.imshow(WALL_IMG, zorder=10)
 
-fig2.savefig("directory" + "contourPlot.png", dpi=250)
+fig2.savefig(directory + "contourPlot.png", dpi=250)
