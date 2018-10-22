@@ -7,3 +7,4 @@ env/
 /plotframes/*
 .DS_Store
 parameter_testing_data/
+main.py
