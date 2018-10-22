@@ -1,0 +1,4 @@
+Stopping search: Swarm best position change less than 0.25
+Position optimals:  [40.07559516 64.36890323]
+Optimal Fitness:  495636.89724721404
+Number of Iterations: 15
