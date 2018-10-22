@@ -69,7 +69,7 @@ log("Start Program")
 
 # run pso
 #OPTIONS: stop pso after either minstep=MIN_STEP and/or  maxiter=MAX_ITER,
-OPTIMAL_POSITIONS, FITNESS, ITER= pso(
+OPTIMAL_POSITIONS, FITNESS, ITER, ITER_FITNESS= pso(
     FIT_LANDSCAPE.getFitness,
     LB,
     UB,

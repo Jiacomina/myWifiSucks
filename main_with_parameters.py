@@ -2,7 +2,7 @@
 Program to calculate optimal wifi node positioning using PSO
 Floor plan can be can be read in as a greyscale image file e.g. png.
 """
-from config import (MAP_FILEPATH, NUM_NODES, SCALE, SWARM_SIZE, phip, phig, omega, SWARM_SIZE_FIXED,
+from config import (NUM_NODES, SCALE, SWARM_SIZE, phip, phig, omega, SWARM_SIZE_FIXED,
 MAX_ITER_FIXED, MIN_STEP_FIXED, phip_fixed, phig_fixed, omega_fixed)
 
 import sys
@@ -18,13 +18,15 @@ from pyswarm import pso
 from floorMap import FloorMap
 from fitness import FitnessLandscape
 
+MAP_FILEPATH = './Images/small_param_room.png'
 cores = os.cpu_count()
 
-# if len(sys.argv) > 1:
-  #  MAP_FILEPATH = './Images/' + sys.argv[1]
-
-# Make data directory
-directory = 'parameter_testing_data/'+sys.argv[1] + '/'
+if len(sys.argv) > 1:
+   MAP_FILEPATH = './Images/' + sys.argv[1]
+   #Make data directory
+   directory = 'parameter_testing_data/'+sys.argv[1] + '/'
+else:
+	directory = 'parameter_testing_data/'+MAP_FILEPATH + '/'
 
 if not os.path.exists(directory):
     os.makedirs(directory)
@@ -103,7 +105,7 @@ if __name__ == "__main__":
 		data_file.write("Optimal Position: "+ str(OPTIMAL_POSITIONS) + '\n')
 		data_file.write("Fitness: "+ str(FITNESS) + '\n')
 		data_file.write("Iterations: "+ str(ITER) + '\n')
-		print(ITER_FITNESS)
+	
 		for item in ITER_FITNESS:
 			data_file.write(str(item[0]) + ': ' + str(item[2]) + ' ' + str(item[1])+'\n')
 		#create get z values(fitness values) using the optimal x y positions
@@ -133,7 +135,7 @@ if __name__ == "__main__":
 		log("Start Program")
 		data_file.write("Pbest: "+ str(pbest) + '\n')
 		print("Processing Pbest: ", directory, pbest)
-		OPTIMAL_POSITIONS, FITNESS, ITER= pso(
+		OPTIMAL_POSITIONS, FITNESS, ITER, ITER_FITNESS= pso(
 			FIT_LANDSCAPE.getFitness,
 			LB,
 			UB,
@@ -156,6 +158,9 @@ if __name__ == "__main__":
 		data_file.write("Optimal Position: "+ str(OPTIMAL_POSITIONS) + '\n')
 		data_file.write("Fitness: "+ str(FITNESS) + '\n')
 		data_file.write("Iterations: "+ str(ITER) + '\n')
+
+		for item in ITER_FITNESS:
+			data_file.write(str(item[0]) + ': ' + str(item[2]) + ' ' + str(item[1])+'\n')
 
 		#create get z values(fitness values) using the optimal x y positions
 		FIT_LANDSCAPE.getFitness(OPTIMAL_POSITIONS)
@@ -185,7 +190,7 @@ if __name__ == "__main__":
 		log("Start Program")
 		data_file.write("Gbest: "+ str(gbest) + '\n')
 		print("Processing Gbest: ", directory, gbest)
-		OPTIMAL_POSITIONS, FITNESS, ITER= pso(
+		OPTIMAL_POSITIONS, FITNESS, ITER, ITER_FITNESS= pso(
 			FIT_LANDSCAPE.getFitness,
 			LB,
 			UB,
@@ -208,6 +213,9 @@ if __name__ == "__main__":
 		data_file.write("Optimal Position: "+ str(OPTIMAL_POSITIONS) + '\n')
 		data_file.write("Fitness: "+ str(FITNESS) + '\n')
 		data_file.write("Iterations: "+ str(ITER) + '\n')
+
+		for item in ITER_FITNESS:
+			data_file.write(str(item[0]) + ': ' + str(item[2]) + ' ' + str(item[1])+'\n')
 
 		#create get z values(fitness values) using the optimal x y positions
 		FIT_LANDSCAPE.getFitness(OPTIMAL_POSITIONS)
@@ -237,7 +245,7 @@ if __name__ == "__main__":
 		log("Start Program")
 		data_file.write("Acc: "+ str(acc) + '\n')
 		print("Processing Acc: ", directory, acc)
-		OPTIMAL_POSITIONS, FITNESS, ITER= pso(
+		OPTIMAL_POSITIONS, FITNESS, ITER, ITER_FITNESS= pso(
 			FIT_LANDSCAPE.getFitness,
 			LB,
 			UB,
@@ -260,6 +268,9 @@ if __name__ == "__main__":
 		data_file.write("Optimal Position: "+ str(OPTIMAL_POSITIONS) + '\n')
 		data_file.write("Fitness: "+ str(FITNESS) + '\n')
 		data_file.write("Iterations: "+ str(ITER) + '\n')
+
+		for item in ITER_FITNESS:
+			data_file.write(str(item[0]) + ': ' + str(item[2]) + ' ' + str(item[1])+'\n')
 
 		#create get z values(fitness values) using the optimal x y positions
 		FIT_LANDSCAPE.getFitness(OPTIMAL_POSITIONS)
