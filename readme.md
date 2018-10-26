@@ -6,13 +6,13 @@ Running the program
 There are several different python scripts available to use:
 
 main.py: Generates a solution from an image
-python main.py <image_file.py>
+* python main.py <image_file.py>
 
 main_with_parameters.py: Generates paramater testing data for a provided image
-python main_with_parameters.py <image_file.py>
+* python main_with_parameters.py <image_file.py>
 
 brute_force.py: Generates a brute force solution from an image
-python brute_force.py <image_file.py>
+* python brute_force.py <image_file.py>
 
 Input Image Array Specifications (as an Integer):
 * 0 - Wall
